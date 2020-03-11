@@ -3,7 +3,12 @@ package org.egov.filestore.repository.impl;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,15 +17,19 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FilenameUtils;
 import org.egov.filestore.domain.model.Artifact;
+import org.egov.filestore.domain.model.FileLocation;
 import org.egov.filestore.repository.AzureClientFacade;
 import org.egov.filestore.repository.CloudFilesManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.microsoft.azure.storage.OperationContext;
+import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.BlobContainerPublicAccessType;
 import com.microsoft.azure.storage.blob.BlobRequestOptions;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
@@ -67,6 +76,7 @@ public class AzureBlobStorageImpl implements CloudFilesManager {
 	@Value("${image.large}")
 	private String _large;
 	
+	private static final String TEMP_FILE_PATH_NAME = "TempFolder/localFile/";
 	
 	/**
 	 * Azure specific implementation
@@ -144,6 +154,66 @@ public class AzureBlobStorageImpl implements CloudFilesManager {
 			}
 		});
 		return mapOfIdAndSASUrls;
+	}
+	
+	public Resource read(FileLocation fileLocation) {
+		Resource resource = null;
+		long startTime = new Date().getTime();
+		if(null == azureBlobClient)
+			azureBlobClient = azureFacade.getAzureClient();
+		
+		CloudBlobContainer container= null;
+		File localFile = null;
+		CloudBlockBlob blob = null;
+		String completeName = fileLocation.getFileName();
+		int index = completeName.indexOf('/');
+		String containerName = completeName.substring(0, index);
+		String fileNameWithPath = completeName.substring(index + 1, completeName.length());
+		try {
+			if(isContainerFixed)
+				container = azureBlobClient.getContainerReference(fixedContainerName);
+			else
+				container = azureBlobClient.getContainerReference(containerName);
+			
+			long beforeCalling = new Date().getTime();
+			
+			blob = container.getBlockBlobReference(fileNameWithPath);
+			
+			File dirPath = new File(TEMP_FILE_PATH_NAME);
+			if(dirPath.exists()||dirPath.mkdirs()) {
+				String fileName = fileNameWithPath.substring(fileNameWithPath.lastIndexOf('/')+1,fileNameWithPath.length());
+				localFile = new File(TEMP_FILE_PATH_NAME+fileName);
+				if(!(localFile.exists() || localFile.createNewFile())) {
+					throw new RuntimeException("Unable to create temp file");
+				}
+			}
+			else {
+				throw new RuntimeException("Unable to create temp directory");
+			}
+			
+			blob.downloadToFile(localFile.getPath());
+
+			long afterAws = new Date().getTime();
+
+			resource = new FileSystemResource(localFile);
+
+			long generateResource = new Date().getTime();
+
+			log.info(" the time to prep Obj : " + (beforeCalling - startTime));
+			log.info(" the time to get object from aws " + (afterAws - beforeCalling));
+			log.info(" the time for creating resource form file : " + (generateResource - afterAws));
+		}catch(Exception e) {
+			log.error("Exceptione while downloading file: ", e);
+		}
+		finally {
+			try {
+				Files.deleteIfExists(localFile.toPath());
+			} catch (IOException e) {
+				log.error("Exceptione while deleting file: ", e);
+			}
+		}
+        
+        return resource;
 	}
 	
 	

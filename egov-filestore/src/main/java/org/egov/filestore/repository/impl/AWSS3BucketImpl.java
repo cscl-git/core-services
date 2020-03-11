@@ -15,12 +15,14 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FilenameUtils;
 import org.egov.filestore.domain.model.Artifact;
+import org.egov.filestore.domain.model.FileLocation;
 import org.egov.filestore.repository.AWSClientFacade;
 import org.egov.filestore.repository.CloudFilesManager;
 import org.egov.tracer.model.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -217,5 +219,13 @@ public class AWSS3BucketImpl implements CloudFilesManager {
 		ObjectMetadata metadata = new ObjectMetadata();
 		metadata.setContentLength(os.size());
 		return new PutObjectRequest(bucketName, key, new ByteArrayInputStream(os.toByteArray()), metadata);
+	}
+	
+
+	/*
+	 * Currently AWS read is implemented in DiskFileStoreRepository
+	 */
+	public Resource read(FileLocation fileLocation) {
+		throw new CustomException("READ_NOT_IMPLEMENTED", "Failed to Read file. Currently AWS read is implemented in DiskFileStoreRepository");
 	}
 }

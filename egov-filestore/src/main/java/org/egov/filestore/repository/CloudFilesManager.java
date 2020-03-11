@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.egov.filestore.domain.model.Artifact;
+import org.egov.filestore.domain.model.FileLocation;
+import org.springframework.core.io.Resource;
 
 public interface CloudFilesManager {
 	
@@ -27,5 +29,15 @@ public interface CloudFilesManager {
 	 * @return
 	 */
 	public Map<String, String> getFiles(Map<String, String> mapOfIdAndFilePath);
+	
+
+	
+	/**
+	 * Interface to fetch files from Cloud. Current implmentations:
+	 * 1. Azure Blob Storage
+	 * 
+	 * @param artifacts
+	 */
+	public Resource read(FileLocation fileLocation);
 
 }

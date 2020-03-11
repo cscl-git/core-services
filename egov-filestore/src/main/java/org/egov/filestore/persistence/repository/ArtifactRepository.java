@@ -92,7 +92,13 @@ public class ArtifactRepository {
 		if (artifact == null)
 			throw new ArtifactNotFoundException(fileStoreId);
 
-		org.springframework.core.io.Resource resource = diskFileStoreRepository.read(artifact.getFileLocation());
+		org.springframework.core.io.Resource resource = null;
+		if(isAzureStorageEnabled) {
+			resource = cloudFilesManager.read(artifact.getFileLocation());
+		}
+		else {
+			resource = diskFileStoreRepository.read(artifact.getFileLocation());
+		}
 		return new Resource(artifact.getContentType(), artifact.getFileName(), resource, artifact.getTenantId(),""+resource.getFile().length()+" bytes");
 	}
 
