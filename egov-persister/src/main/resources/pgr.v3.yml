@@ -7,7 +7,7 @@ serviceMaps:
    fromTopic: save-pgr-service
    isTransaction: true
    queryMaps:
-    - query: INSERT INTO eg_pgr_service(tenantid, servicecode, servicerequestid, description, lat, "long", addressid, address, email, deviceid, accountid, firstname, lastname, phone, attributes, status, source, expectedtime, rating, feedback, landmark, createdby, createdtime, lastmodifiedby, lastmodifiedtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    - query: INSERT INTO eg_pgr_service(tenantid, servicecode, servicerequestid, description, lat, "long", addressid, address, email, deviceid, accountid, firstname, lastname, phone, attributes, status, source, expectedtime, rating, feedback, landmark, createdby, createdtime, lastmodifiedby, lastmodifiedtime, category) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
       basePath: services.*
       jsonMaps:
@@ -64,6 +64,8 @@ serviceMaps:
        - jsonPath: $.services.*.auditDetails.lastModifiedBy
 
        - jsonPath: $.services.*.auditDetails.lastModifiedTime
+       
+       - jsonPath: $.services.*.category
 
 
     - query: INSERT INTO eg_pgr_action(uuid, by, "when", action, status, comments, media, assignee, isinternal, tenantid, businesskey) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
@@ -95,6 +97,7 @@ serviceMaps:
 
        - jsonPath: $.actionInfo.*.businessKey
        
+    
        
     - query: INSERT INTO eg_pgr_address(uuid, housenoandstreetname, mohalla, landmark, latitude, longitude, city, tenantid, createdby, createdtime, lastmodifiedby, lastmodifiedtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
@@ -133,7 +136,7 @@ serviceMaps:
    isTransaction: true
    queryMaps:
 
-    - query: UPDATE eg_pgr_service SET servicecode=?, description=?,lat=?, "long"=?, addressid=?, address=?, email=?, deviceid=?, firstname=?, lastname=?, phone=?, attributes=?,  status=?, source=?, expectedtime=?, feedback=?, rating=?, landmark=?, lastmodifiedby=?, lastmodifiedtime=? WHERE tenantid=? AND servicerequestid=?;
+    - query: UPDATE eg_pgr_service SET servicecode=?, description=?,lat=?, long=?, addressid=?, address=?, email=?, deviceid=?, firstname=?, lastname=?, phone=?, attributes=?,  status=?, source=?, expectedtime=?, feedback=?, rating=?, landmark=?, lastmodifiedby=?, lastmodifiedtime=?, category=? WHERE tenantid=? AND servicerequestid=?;
 
       basePath: services.*
       jsonMaps:
@@ -179,10 +182,13 @@ serviceMaps:
        - jsonPath: $.services.*.auditDetails.lastModifiedBy
 
        - jsonPath: $.services.*.auditDetails.lastModifiedTime
+       
+       - jsonPath: $.services.*.category
 
        - jsonPath: $.services.*.tenantId
 
        - jsonPath: $.services.*.serviceRequestId
+       
 
 
     - query: INSERT INTO eg_pgr_action(uuid, by, "when", action, status, comments, media, assignee, isinternal, tenantid, businesskey) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);

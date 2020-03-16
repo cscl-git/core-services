@@ -51,6 +51,9 @@ SearchDefinitions:
     - name: active
       isMandatory: false
       jsonPath: $.searchCriteria.active
+      name: category
+      isMandatory: false
+      jsonPath: $.searchCriteria.category
     pagination:
       noOfRecords: $.searchCriteria.noOfRecords
       offset: $.searchCriteria.offset
@@ -123,6 +126,9 @@ SearchDefinitions:
     - name: active
       isMandatory: false
       jsonPath: $.searchCriteria.active
+      name: category
+      isMandatory: false
+      jsonPath: $.searchCriteria.category
       
    output:
     jsonFormat: {"ResponseInfo": {}}
@@ -177,6 +183,9 @@ SearchDefinitions:
     - name: active
       isMandatory: false
       jsonPath: $.searchCriteria.active
+      name: category
+      isMandatory: false
+      jsonPath: $.searchCriteria.category
     pagination:
       noOfRecords: $.searchCriteria.noOfRecords
       offset: $.searchCriteria.offset
