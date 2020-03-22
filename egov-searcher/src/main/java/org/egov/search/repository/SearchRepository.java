@@ -36,6 +36,7 @@ public class SearchRepository {
         String query = searchUtils.buildQuery(searchRequest, definition.getSearchParams(), definition.getQuery(), preparedStatementValues);
 		List<PGobject> maps = namedParameterJdbcTemplate.queryForList(query, preparedStatementValues, PGobject.class);
 
+		log.info("Searchcher query executed:"+maps);
 		return searchUtils.convertPGOBjects(maps);
 	}
 
