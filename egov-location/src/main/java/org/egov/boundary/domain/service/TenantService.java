@@ -24,6 +24,7 @@ public class TenantService {
         STATE_CODES.put("Andhra Pradesh", "ap");
         STATE_CODES.put("Maharashtra", "mh");
         STATE_CODES.put("Punjab", "pb");
+        STATE_CODES.put("Chandigarh", "ch");
     }
 
     private final GoogleLocationService locationService;
@@ -55,7 +56,7 @@ public class TenantService {
         Optional<Location> location = locationService.reverseGeoCode(lat, lng);
         if (location.isPresent()) {
             Location loc = location.get();
-            LOG.debug(loc.toString());
+            LOG.info(loc.toString());
 
             //Check if provided tenant matches, resolved tenant
 
