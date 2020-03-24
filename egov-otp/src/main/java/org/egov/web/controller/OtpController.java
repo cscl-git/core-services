@@ -11,7 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.extern.slf4j.Slf4j;
+
 @RestController
+@Slf4j
 public class OtpController {
 
     private TokenService tokenService;
@@ -23,7 +26,9 @@ public class OtpController {
     @PostMapping("v1/_create")
     @ResponseStatus(HttpStatus.CREATED)
     public OtpResponse createOtp(@RequestBody OtpRequest otpRequest) {
+    	log.info("Received Otp request for "+otpRequest.getTokenRequest().getIdentity());
         final Token token = tokenService.create(otpRequest.getTokenRequest());
+        log.info("Otp generated & persisted.Sending response for "+token.getIdentity()+" ,otp: "+token.getNumber());
         return new OtpResponse(token);
     }
 
