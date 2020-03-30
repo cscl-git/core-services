@@ -39,12 +39,16 @@ public class ReportRepository {
         jdbcTemplate.setQueryTimeout(queryExecutionTimeout);
     }
 
-    private Map<String, Object>  getQueryParameters(ReportRequest reportRequest) {
+    private Map<String, Object>  getQueryParameters(ReportRequest reportRequest, ReportDefinition reportDefinition) {
         Map<String, Object> parameters = new HashMap<String, Object>();
         Long userId = reportRequest.getRequestInfo().getUserInfo() == null ? null : reportRequest.getRequestInfo().getUserInfo().getId();
 
         parameters.put("tenantId", reportRequest.getTenantId());
-        parameters.put("userId",  userId);
+        if ("rainmaker-pgr".equalsIgnoreCase(reportDefinition.getModuleName())) {
+        	parameters.put("userId", String.valueOf(userId));
+        }else {
+        	parameters.put("userId",  userId);
+        }
         parameters.put("currentTime",  System.currentTimeMillis());
 
         for (SearchParam param :reportRequest.getSearchParams()) {
@@ -55,7 +59,7 @@ public class ReportRepository {
     }
 
     public String getQuery(ReportRequest reportRequest, ReportDefinition reportDefinition, String authToken) {
-        Map<String, Object> parameters = getQueryParameters(reportRequest);
+        Map<String, Object> parameters = getQueryParameters(reportRequest, reportDefinition);
         String originalQuery = reportDefinition.getQuery();
         String query = originalQuery;
         Long userId = reportRequest.getRequestInfo().getUserInfo() == null ? null : reportRequest.getRequestInfo().getUserInfo().getId();
@@ -82,7 +86,7 @@ public class ReportRepository {
         List<Map<String, Object>> maps = null;
 
         String query = getQuery(reportRequest, reportDefinition, authToken);
-        Map<String, Object> parameters = getQueryParameters(reportRequest);
+        Map<String, Object> parameters = getQueryParameters(reportRequest, reportDefinition);
 
         MapSqlParameterSource params =  new MapSqlParameterSource(parameters);
         log.info("final query:" + query);
