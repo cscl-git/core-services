@@ -35,7 +35,7 @@ public class SearchRepository {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 	
-	@Value("${max.sql.execution.time.millisec:45000}")
+	@Value("${max.sql.execution.time.millisec:15000}")
 	private Long maxExecutionTime;
 	
 	@Value(("${report.query.timeout}"))
