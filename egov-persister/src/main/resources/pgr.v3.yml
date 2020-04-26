@@ -66,6 +66,8 @@ serviceMaps:
        - jsonPath: $.services.*.auditDetails.lastModifiedTime
        
        - jsonPath: $.services.*.category
+       
+       - jsonPath: $.services.*.slaEndTime
 
 
     - query: INSERT INTO eg_pgr_action(uuid, by, "when", action, status, comments, media, assignee, isinternal, tenantid, businesskey) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
@@ -136,7 +138,7 @@ serviceMaps:
    isTransaction: true
    queryMaps:
 
-    - query: UPDATE eg_pgr_service SET servicecode=?, description=?,lat=?, long=?, addressid=?, address=?, email=?, deviceid=?, firstname=?, lastname=?, phone=?, attributes=?,  status=?, source=?, expectedtime=?, feedback=?, rating=?, landmark=?, lastmodifiedby=?, lastmodifiedtime=?, category=? WHERE tenantid=? AND servicerequestid=?;
+    - query: UPDATE eg_pgr_service SET servicecode=?, description=?,lat=?, long=?, addressid=?, address=?, email=?, deviceid=?, firstname=?, lastname=?, phone=?, attributes=?,  status=?, source=?, expectedtime=?, feedback=?, rating=?, landmark=?, lastmodifiedby=?, lastmodifiedtime=?, category=?, slaendtime=? WHERE tenantid=? AND servicerequestid=?;
 
       basePath: services.*
       jsonMaps:
@@ -184,6 +186,8 @@ serviceMaps:
        - jsonPath: $.services.*.auditDetails.lastModifiedTime
        
        - jsonPath: $.services.*.category
+       
+       - jsonPath: $.services.*.slaEndTime
 
        - jsonPath: $.services.*.tenantId
 
