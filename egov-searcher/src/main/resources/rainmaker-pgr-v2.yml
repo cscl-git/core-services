@@ -51,9 +51,13 @@ SearchDefinitions:
     - name: active
       isMandatory: false
       jsonPath: $.searchCriteria.active
-      name: category
+    - name: category
       isMandatory: false
       jsonPath: $.searchCriteria.category
+    - name: slaendtime
+      isMandatory: false
+      operator: LE
+      jsonPath: $.searchCriteria.slaEndTime
     pagination:
       noOfRecords: $.searchCriteria.noOfRecords
       offset: $.searchCriteria.offset
@@ -126,10 +130,13 @@ SearchDefinitions:
     - name: active
       isMandatory: false
       jsonPath: $.searchCriteria.active
-      name: category
+    - name: category
       isMandatory: false
       jsonPath: $.searchCriteria.category
-      
+    - name: slaendtime
+      isMandatory: false
+      operator: LE
+      jsonPath: $.searchCriteria.slaEndTime
    output:
     jsonFormat: {"ResponseInfo": {}}
     outJsonPath: $.count
@@ -183,9 +190,13 @@ SearchDefinitions:
     - name: active
       isMandatory: false
       jsonPath: $.searchCriteria.active
-      name: category
+    - name: category
       isMandatory: false
       jsonPath: $.searchCriteria.category
+    - name: slaendtime
+      isMandatory: false
+      operator: LE
+      jsonPath: $.searchCriteria.slaEndTime
     pagination:
       noOfRecords: $.searchCriteria.noOfRecords
       offset: $.searchCriteria.offset
