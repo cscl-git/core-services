@@ -1,6 +1,9 @@
 package org.egov.wf.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.NoArgsConstructor;
+
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.common.contract.request.User;
 import org.egov.tracer.model.CustomException;
@@ -18,6 +21,7 @@ import java.util.*;
 
 
 @Service
+@NoArgsConstructor
 public class UserService {
 
 
