@@ -15,6 +15,7 @@ import org.egov.mdms.model.MasterDetail;
 import org.egov.mdms.model.MdmsCriteria;
 import org.egov.mdms.model.MdmsCriteriaReq;
 import org.egov.mdms.model.ModuleDetail;
+import org.egov.report.utils.ReportConstants;
 import org.egov.swagger.model.ExternalService;
 import org.egov.swagger.model.ReportDefinition;
 import org.egov.swagger.model.SearchColumn;
@@ -50,7 +51,7 @@ public class ReportQueryBuilder {
 
         String baseQuery = null;
 
-        log.info("ReportDefinition: " + reportDefinition);
+        //log.info("ReportDefinition: " + reportDefinition);
         if (reportDefinition.getQuery().contains("UNION")) {
             baseQuery = generateUnionQuery(searchParams, tenantId, reportDefinition);
         } else if (reportDefinition.getQuery().contains("FULLJOIN")) {
@@ -70,12 +71,18 @@ public class ReportQueryBuilder {
         baseQuery = baseQuery.replaceAll("\\$tenantid", ":tenantId");
 
         baseQuery = baseQuery.replaceAll("\\$userid", ":userId");
+        
+        if (ReportConstants.PGR_MODULE.equalsIgnoreCase(reportDefinition.getModuleName())
+        	&& ReportConstants.PGR_ESCALATION_OFFICER_REPORT.equalsIgnoreCase(reportDefinition.getReportName())) {
+        	baseQuery = baseQuery.replaceAll("\\$categoryFor1stLevel", ":categoryFor1stLevel");
+        	baseQuery = baseQuery.replaceAll("\\$categoryFor2ndLevel", ":categoryFor2ndLevel");
+        }
 
         for (SearchParam searchParam : searchParams) {
             baseQuery = baseQuery.replaceAll("\\$" + searchParam.getName(), ":" + searchParam.getName());
         }
 
-        log.info("baseQuery :" + baseQuery);
+        //log.info("baseQuery :" + baseQuery);
         return baseQuery;
     }
 
@@ -138,10 +145,10 @@ public class ReportQueryBuilder {
                 try {
                     if (es.getPostObject() != null) {
                         res = restTemplate.postForObject(uri, request, String.class);
-                        log.info("Response - 1: " + res);
+                        //log.info("Response - 1: " + res);
                     } else {
                         res = restTemplate.postForObject(uri, getRInfo(authToken), String.class);
-                        log.info("Response - 2 : " + res);
+                        //log.info("Response - 2 : " + res);
                     }
                 } catch (HttpClientErrorException e) {
                     log.error("Exception while fetching data from mdms: ", e);
@@ -303,7 +310,7 @@ public class ReportQueryBuilder {
             query.append(" " + orderByQuery);
 
         }
-        log.info("generate baseQuery :" + query);
+        //log.info("generate baseQuery :" + query);
         return query.toString();
     }
 

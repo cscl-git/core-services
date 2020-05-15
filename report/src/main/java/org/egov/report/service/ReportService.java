@@ -8,6 +8,7 @@ import org.egov.domain.model.MetaDataRequest;
 import org.egov.domain.model.ReportDefinitions;
 import org.egov.domain.model.Response;
 import org.egov.report.repository.ReportRepository;
+import org.egov.report.utils.ReportConstants;
 import org.egov.swagger.model.*;
 import org.egov.swagger.model.ColumnDetail.TypeEnum;
 import org.egov.tracer.model.CustomException;
@@ -187,6 +188,16 @@ public class ReportService {
         ReportResponse rResponse = new ReportResponse();
         ReportDefinitions rds = ReportApp.getReportDefs();
         List<String> subReportNames = new ArrayList<>();
+        
+        List<String> codes = reportRequest.getRequestInfo().getUserInfo().getRoles().stream().map(org.egov.common.contract.request.Role::getName).collect(Collectors.toList());
+		
+        //In PGR module change the report name of EmployeeReport to EscalationOfficerReport if the user is escation officer
+		if (ReportConstants.PGR_EMPLOYEE_REPORT.equalsIgnoreCase(reportRequest.getReportName())
+				&&	(codes.contains(ReportConstants.ROLE_ESCALATION_OFFICER1) 
+						|| codes.contains(ReportConstants.ROLE_ESCALATION_OFFICER2))){
+			reportRequest.setReportName(ReportConstants.PGR_ESCALATION_OFFICER_REPORT);
+		}
+        
         ReportDefinition reportDefinition = rds.getReportDefinition(moduleName + " " + reportRequest.getReportName());
         if (reportDefinition.isSubReport()) {
             rResponse = getReportData(reportRequest, moduleName, reportRequest.getReportName(), authToken);
