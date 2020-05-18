@@ -1,6 +1,7 @@
 package org.egov.web.notification.mail.service;
 
 import org.egov.web.notification.mail.model.Email;
+import org.egov.web.notification.mail.model.Email.EmailAttachment;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -18,5 +19,14 @@ public class ConsoleEmailService implements EmailService {
                         email.getBody()
                 )
         );
+        if (email.getAttachments() != null) {
+        	for (EmailAttachment attachment : email.getAttachments()) {
+				System.out.println(String.format("Attaching file %s with mimeType %s with url %s ", 
+					attachment.getName(),
+					attachment.getMimeType(),
+					attachment.getUrl()
+				));
+			}
+        }
     }
 }
