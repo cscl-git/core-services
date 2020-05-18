@@ -9,7 +9,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.egov.web.notification.mail.model.Email;
-import org.egov.web.notification.mail.model.Email.EmailAttachment;
+import org.egov.web.notification.mail.model.EmailAttachment;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.InputStreamSource;
 import org.springframework.mail.SimpleMailMessage;

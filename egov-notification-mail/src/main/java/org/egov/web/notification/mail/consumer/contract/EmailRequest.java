@@ -3,7 +3,7 @@ package org.egov.web.notification.mail.consumer.contract;
 import java.util.List;
 
 import org.egov.web.notification.mail.model.Email;
-import org.egov.web.notification.mail.model.Email.EmailAttachment;
+import org.egov.web.notification.mail.model.EmailAttachment;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
