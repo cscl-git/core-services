@@ -8,15 +8,21 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.domain.model.RequestInfoWrapper;
+import org.egov.mdms.model.MasterDetail;
+import org.egov.mdms.model.MdmsCriteria;
+import org.egov.mdms.model.MdmsCriteriaReq;
+import org.egov.mdms.model.ModuleDetail;
+import org.egov.report.repository.ServiceRequestRepository;
+import org.egov.report.utils.ReportConstants;
 import org.egov.swagger.model.ColumnDetail;
 import org.egov.swagger.model.ColumnDetail.TypeEnum;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.egov.swagger.model.MetadataResponse;
 import org.egov.swagger.model.ReportDefinition;
 import org.egov.swagger.model.SearchColumn;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
 
 import com.jayway.jsonpath.Configuration;
@@ -25,9 +31,18 @@ import com.jayway.jsonpath.JsonPath;
 @Slf4j
 @Service
 public class IntegrationService {
+	
+	@Value("${egov.mdms.host}")
+	private String mdmsHost;
+
+	@Value("${egov.mdms.search.endpoint}")
+	private String mdmsEndpoint;
 
     @Autowired
     private RestTemplate restTemplate;
+    
+    @Autowired
+	private ServiceRequestRepository serviceRequestRepository;
 
     public MetadataResponse getData(ReportDefinition reportDefinition, MetadataResponse metadataResponse, RequestInfo requestInfo, String moduleName) {
 
@@ -144,4 +159,87 @@ public class IntegrationService {
         calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
         return calendar.getTimeInMillis();
     }
+    
+    public Map<String,List<String>> fetchCategoriesForEscalationOfficer(RequestInfo requestInfo, String tenantId) {
+		Map<String,List<String>> categoryMap = new HashMap<String, List<String>>();
+		List<String> categoryList1=null;
+		List<String> categoryList2=null;
+		try {
+			//Get category list for escalationOfficer1
+			Object result = fetchCategoriesFromAutoroutingEscalationMap(requestInfo, tenantId);
+			
+			if(null != result) {
+				List objList = JsonPath.read(result, ReportConstants.JSONPATH_AUTOROUTING_MAP_CODES);
+				if(CollectionUtils.isEmpty(objList)) {
+					return null;
+				}
+				
+				//Category list of escalation officer1
+				for (int i = 0; i < objList.size(); i++) {
+					List<String> escalationOfficer1List = JsonPath.read(objList.get(i), ReportConstants.AUTOROUTING_ESCALATING_OFFICER1_JSONPATH);
+					if(!CollectionUtils.isEmpty(escalationOfficer1List)) {
+						if(escalationOfficer1List.contains(requestInfo.getUserInfo().getUserName())) {
+							if(CollectionUtils.isEmpty(categoryList1))
+								categoryList1=new ArrayList<String>();
+							categoryList1.add(JsonPath.read(objList.get(i), ReportConstants.AUTOROUTING_CATEGORY_JSONPATH));
+						}
+					}
+				}
+				
+				//Category list of escalation officer2
+				for (int i = 0; i < objList.size(); i++) {
+					List<String> escalationOfficer2List = JsonPath.read(objList.get(i), ReportConstants.AUTOROUTING_ESCALATING_OFFICER2_JSONPATH);
+					if(!CollectionUtils.isEmpty(escalationOfficer2List)) {
+						if(escalationOfficer2List.contains(requestInfo.getUserInfo().getUserName())) {
+							if(CollectionUtils.isEmpty(categoryList2))
+								categoryList2=new ArrayList<String>();
+							categoryList2.add(JsonPath.read(objList.get(i), ReportConstants.AUTOROUTING_CATEGORY_JSONPATH));
+						}
+					}
+				}
+			}
+			
+		} catch (Exception e) {
+			log.error("Exception while fetching fetchCategoriesForEscalationOfficer: " + e);
+		}
+		
+		categoryMap.put(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER1_NAME, categoryList1);
+		categoryMap.put(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER2_NAME, categoryList2);
+		
+		return categoryMap;
+
+	}
+    
+    
+    private Object fetchCategoriesFromAutoroutingEscalationMap(RequestInfo requestInfo, String tenantId) {
+    	requestInfo.setTs(null);
+		StringBuilder uri = new StringBuilder();
+		MdmsCriteriaReq mdmsCriteriaReq = prepareCategoryMdmsRequestByEscalationOfficer(uri, tenantId, requestInfo);
+		Object response = null;
+		try {
+			response = serviceRequestRepository.fetchResult(uri, mdmsCriteriaReq);
+		} catch (Exception e) {
+			log.error("Exception while fetching fetchCategoriesFromAutoroutingEscalationMap: " + e);
+		}
+		return response;
+
+	}
+    
+    private MdmsCriteriaReq prepareCategoryMdmsRequestByEscalationOfficer(StringBuilder uri, String tenantId, RequestInfo requestInfo) {
+    	
+		uri.append(mdmsHost).append(mdmsEndpoint);
+		MasterDetail masterDetail = org.egov.mdms.model.MasterDetail.builder()
+				.name(ReportConstants.MDMS_AUTOROUTING_ESCALATION_MAP_MASTER_NAME)
+				.filter("[?(@.active == true)]")
+				.build();
+			
+		List<MasterDetail> masterDetails = new ArrayList<>();
+		masterDetails.add(masterDetail);
+		ModuleDetail moduleDetail = ModuleDetail.builder().moduleName(ReportConstants.MDMS_PGR_MOD_NAME)
+				.masterDetails(masterDetails).build();
+		List<ModuleDetail> moduleDetails = new ArrayList<>();
+		moduleDetails.add(moduleDetail);
+		MdmsCriteria mdmsCriteria = MdmsCriteria.builder().tenantId(tenantId).moduleDetails(moduleDetails).build();
+		return MdmsCriteriaReq.builder().requestInfo(requestInfo).mdmsCriteria(mdmsCriteria).build();
+	}
 }

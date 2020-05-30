@@ -1,7 +1,11 @@
 package org.egov.report.repository;
 
 import lombok.extern.slf4j.Slf4j;
+
+
 import org.egov.report.repository.builder.ReportQueryBuilder;
+import org.egov.report.service.IntegrationService;
+import org.egov.report.utils.ReportConstants;
 import org.egov.swagger.model.*;
 import org.egov.tracer.model.CustomException;
 import org.postgresql.util.PSQLException;
@@ -11,6 +15,7 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.*;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.*;
 import java.util.*;
@@ -26,6 +31,9 @@ public class ReportRepository {
 
     @Autowired
     private ReportQueryBuilder reportQueryBuilder;
+    
+    @Autowired
+    private IntegrationService integrationService;
 
     @Value("${max.sql.execution.time.millisec:45000}")
     private Long maxExecutionTime;
@@ -44,7 +52,7 @@ public class ReportRepository {
         Long userId = reportRequest.getRequestInfo().getUserInfo() == null ? null : reportRequest.getRequestInfo().getUserInfo().getId();
 
         parameters.put("tenantId", reportRequest.getTenantId());
-        if ("rainmaker-pgr".equalsIgnoreCase(reportDefinition.getModuleName())) {
+        if (ReportConstants.PGR_MODULE.equalsIgnoreCase(reportDefinition.getModuleName())) {
         	parameters.put("userId", String.valueOf(userId));
         }else {
         	parameters.put("userId",  userId);
@@ -71,7 +79,7 @@ public class ReportRepository {
             }
 
             query = query.replaceAll("\\$_" + param.getName(), value.replace("$","\\$"));
-            log.info(query);
+            //log.info(query);
         }
 
         reportDefinition.setQuery(query);
@@ -88,6 +96,9 @@ public class ReportRepository {
         String query = getQuery(reportRequest, reportDefinition, authToken);
         Map<String, Object> parameters = getQueryParameters(reportRequest, reportDefinition);
 
+        //In PGR get category of escalating officer
+        getQueryParametersOfEOCategory(reportRequest, reportDefinition, parameters);
+        
         MapSqlParameterSource params =  new MapSqlParameterSource(parameters);
         log.info("final query:" + query);
         try {
@@ -114,4 +125,25 @@ public class ReportRepository {
         return maps;
     }
 
+    
+    private void getQueryParametersOfEOCategory(ReportRequest reportRequest, ReportDefinition reportDefinition, Map<String, Object> parameters) {
+    	if (ReportConstants.PGR_MODULE.equalsIgnoreCase(reportDefinition.getModuleName())
+    			&& ReportConstants.PGR_ESCALATION_OFFICER_REPORT.equalsIgnoreCase(reportDefinition.getReportName())) {
+        		
+    		Map<String,List<String>> categoryList = integrationService.fetchCategoriesForEscalationOfficer(reportRequest.getRequestInfo(), reportRequest.getTenantId());
+    		List<String> emptyString = new ArrayList<String>();
+    		emptyString.add(" ");
+    		
+    		if(!CollectionUtils.isEmpty(categoryList.get(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER1_NAME))) {
+    			parameters.put("categoryFor1stLevel", categoryList.get(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER1_NAME));
+    		}else {
+    			parameters.put("categoryFor1stLevel", emptyString);
+    		}
+    		if(!CollectionUtils.isEmpty(categoryList.get(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER2_NAME))) {
+    			parameters.put("categoryFor2ndLevel", categoryList.get(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER2_NAME));
+    		}else {
+    			parameters.put("categoryFor2ndLevel", emptyString);
+    		}
+        }
+    }
 }
