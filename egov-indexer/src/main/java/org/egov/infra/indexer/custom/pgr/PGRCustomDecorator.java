@@ -81,7 +81,7 @@ public class PGRCustomDecorator {
 	 */
 	public String getDepartment(Service service) {
 		StringBuilder uri = new StringBuilder();
-		MdmsCriteriaReq request = prepareMdMsRequestForDept(uri, "pb", service.getServiceCode(), new RequestInfo());
+		MdmsCriteriaReq request = prepareMdMsRequestForDept(uri, "ch", service.getServiceCode(), new RequestInfo());
 		try {
 			Object response = restTemplate.postForObject(uri.toString(), request, Map.class);
 			List<String> depts = JsonPath.read(response, "$.MdmsRes.RAINMAKER-PGR.ServiceDefs");

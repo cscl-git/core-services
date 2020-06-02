@@ -19,6 +19,7 @@ public class EmailNotificationListener {
     @KafkaListener(topics = "${kafka.topics.notification.mail.name}")
     public void listen(EmailRequest emailRequest) {
         emailService.sendEmail(emailRequest.toDomain());
+        System.out.println("Sent email...");
     }
 
 }

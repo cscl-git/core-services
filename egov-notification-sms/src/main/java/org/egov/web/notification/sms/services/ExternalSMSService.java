@@ -67,6 +67,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.net.ssl.SSLContext;
+
+import java.io.UnsupportedEncodingException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -170,21 +172,27 @@ public class ExternalSMSService implements SMSService {
                 }
             }
 
-        } catch (RestClientException e) {
-            LOGGER.error("Error occurred while sending SMS to " + sms.getMobileNumber(), e);
-            throw e;
-        }
-    }
+        } catch (RestClientException | NoSuchAlgorithmException | UnsupportedEncodingException e) {
+			LOGGER.error("Error occurred while sending SMS to " + sms.getMobileNumber(), e);
+			throw new RuntimeException(e);
+		} 
+   }
 
     private boolean isResponseCodeInKnownErrorCodeList(ResponseEntity<?> response) {
         final String responseCode = Integer.toString(response.getStatusCodeValue());
         return smsProperties.getSmsErrorCodes().stream().anyMatch(errorCode -> errorCode.equals(responseCode));
     }
 
-    private HttpEntity<MultiValueMap<String, String>> getRequest(Sms sms) {
-        final MultiValueMap<String, String> requestBody = smsProperties.getSmsRequestBody(sms);
-        return new HttpEntity<>(requestBody, getHttpHeaders());
-    }
+	private HttpEntity<MultiValueMap<String, String>> getRequest(Sms sms) {
+		MultiValueMap<String, String> requestBody = null;
+		try {
+			requestBody = smsProperties.getSmsRequestBody(sms);
+		} catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+			LOGGER.error("Error occurred while sending SMS to " + sms.getMobileNumber(), e);
+			throw new RuntimeException(e);
+		}
+		return new HttpEntity<>(requestBody, getHttpHeaders());
+	}
 
     private HttpHeaders getHttpHeaders() {
         HttpHeaders headers = new HttpHeaders();

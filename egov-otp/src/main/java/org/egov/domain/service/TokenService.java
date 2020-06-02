@@ -35,9 +35,11 @@ public class TokenService {
 
     public Token create(TokenRequest tokenRequest) {
         tokenRequest.validate();
+        log.info("Otp validation successfull for "+tokenRequest.getIdentity());
         Token token = Token.builder().uuid(UUID.randomUUID().toString()).tenantId(tokenRequest.getTenantId())
                 .identity(tokenRequest.getIdentity()).number(randomNumeric(otpLength))
                 .timeToLiveInSeconds(tokenRequest.getTimeToLive()).build();
+        log.info("Otp "+token.getNumber()+" generated for "+tokenRequest.getIdentity());
         return tokenRepository.save(token);
     }
 

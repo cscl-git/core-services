@@ -17,8 +17,11 @@ import org.egov.domain.model.MessageSearchCriteria;
 import org.egov.domain.model.Tenant;
 import org.egov.persistence.repository.MessageCacheRepository;
 import org.egov.persistence.repository.MessageRepository;
+import org.egov.tracer.model.CustomException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Responsible for creating, updating and computing localization message list.
@@ -47,11 +50,13 @@ import org.springframework.util.CollectionUtils;
  * messages with key <locale>:default
  */
 @Service
-//@Slf4j
+@Slf4j
 public class MessageService {
 	private static final String ENGLISH_INDIA = "en_IN";
 	private MessageRepository messageRepository;
 	private MessageCacheRepository messageCacheRepository;
+	private static final String INVALID_MESSAGE_REQUESTS_CODE = "INVALID_MESSAGE_REQUESTS";
+	private static final String INVALID_MESSAGE_REQUESTS_MSG = "Invalid message request";
 
 	public MessageService(MessageRepository messageRepository, MessageCacheRepository messageCacheRepository) {
 		this.messageRepository = messageRepository;
@@ -215,9 +220,17 @@ public class MessageService {
 		if (cachedMessages != null) {
 			return cachedMessages;
 		}
-		final List<Message> messages = messageRepository.findByTenantIdAndLocale(tenant, locale);
-		messageCacheRepository.cacheMessages(locale, tenant, messages);
-		return messages;
+		
+		try {
+			final List<Message> messages = messageRepository.findByTenantIdAndLocale(tenant, locale);
+			messageCacheRepository.cacheMessages(locale, tenant, messages);
+			return messages;
+		}catch(Exception e) {
+			log.error("Unable to get message ",e);
+			Map<String, String> errorMap = new HashMap<>();
+			errorMap.put(INVALID_MESSAGE_REQUESTS_CODE, INVALID_MESSAGE_REQUESTS_MSG);
+			throw new CustomException(errorMap);
+		}
 	}
 
 }

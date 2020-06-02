@@ -8,6 +8,7 @@ import org.egov.domain.model.MetaDataRequest;
 import org.egov.domain.model.ReportDefinitions;
 import org.egov.domain.model.Response;
 import org.egov.report.repository.ReportRepository;
+import org.egov.report.utils.ReportConstants;
 import org.egov.swagger.model.*;
 import org.egov.swagger.model.ColumnDetail.TypeEnum;
 import org.egov.tracer.model.CustomException;
@@ -42,6 +43,18 @@ public class ReportService {
             ReportDefinitions rds = ReportApp.getReportDefs();
             ReportDefinition reportDefinition = new ReportDefinition();
             //   LOGGER.info("updated repot defs " + ReportApp.getReportDefs() + "\n\n\n");
+            
+            List<String> codes = metaDataRequest.getRequestInfo().getUserInfo().getRoles().stream().map(org.egov.common.contract.request.Role::getName).collect(Collectors.toList());
+    		
+            log.info("Module Name: {}, Report Name: {} ",moduleName,metaDataRequest.getReportName());
+            //In PGR module change the report name of EmployeeReport to EscalationOfficerReport if the user is escation officer
+    		if (ReportConstants.PGR_EMPLOYEE_REPORT.equalsIgnoreCase(metaDataRequest.getReportName())
+    				&&	(codes.contains(ReportConstants.ROLE_ESCALATION_OFFICER1) 
+    						|| codes.contains(ReportConstants.ROLE_ESCALATION_OFFICER2))){
+    			log.info("Module Name: {}, Old Report Name: {}, New Report Name: {}",moduleName,metaDataRequest.getReportName(),ReportConstants.PGR_ESCALATION_OFFICER_REPORT);
+    			metaDataRequest.setReportName(ReportConstants.PGR_ESCALATION_OFFICER_REPORT);
+    		}
+            
             reportDefinition = rds.getReportDefinition(moduleName + " " + metaDataRequest.getReportName());
             ReportMetadata rmt = new ReportMetadata();
             if (reportDefinition != null) {
@@ -187,6 +200,18 @@ public class ReportService {
         ReportResponse rResponse = new ReportResponse();
         ReportDefinitions rds = ReportApp.getReportDefs();
         List<String> subReportNames = new ArrayList<>();
+        
+        List<String> codes = reportRequest.getRequestInfo().getUserInfo().getRoles().stream().map(org.egov.common.contract.request.Role::getName).collect(Collectors.toList());
+		
+        log.info("Module Name: {}, Report Name: {} ",moduleName,reportRequest.getReportName());
+        //In PGR module change the report name of EmployeeReport to EscalationOfficerReport if the user is escation officer
+		if (ReportConstants.PGR_EMPLOYEE_REPORT.equalsIgnoreCase(reportRequest.getReportName())
+				&&	(codes.contains(ReportConstants.ROLE_ESCALATION_OFFICER1) 
+						|| codes.contains(ReportConstants.ROLE_ESCALATION_OFFICER2))){
+			log.info("Module Name: {}, Old Report Name: {}, New Report Name: {}",moduleName,reportRequest.getReportName(),ReportConstants.PGR_ESCALATION_OFFICER_REPORT);
+			reportRequest.setReportName(ReportConstants.PGR_ESCALATION_OFFICER_REPORT);
+		}
+        
         ReportDefinition reportDefinition = rds.getReportDefinition(moduleName + " " + reportRequest.getReportName());
         if (reportDefinition.isSubReport()) {
             rResponse = getReportData(reportRequest, moduleName, reportRequest.getReportName(), authToken);
