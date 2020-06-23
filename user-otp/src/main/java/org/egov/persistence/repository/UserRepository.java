@@ -25,12 +25,19 @@ public class UserRepository {
 
 	@Value("${search.user.url}")
 	private String SEARCH_USER_URL;
+	
+	final private static String USER_TYPE_CITIZEN="CITIZEN";
 
 	@Autowired
 	private RestTemplate restTemplate;
 
 	public User fetchUser(String mobileNumber, String tenantId, String userType) {
-		final UserSearchRequest request = new UserSearchRequest(mobileNumber, tenantId, userType);
+		UserSearchRequest request = null;
+		if(USER_TYPE_CITIZEN.equalsIgnoreCase(userType)){
+			request = new UserSearchRequest(mobileNumber, tenantId, userType, null);
+		}else {
+			request = new UserSearchRequest(null, tenantId, userType, mobileNumber);
+		}
 
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
