@@ -35,7 +35,7 @@ public class SearchRepository {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 	
-	@Value("${max.sql.execution.time.millisec:15000}")
+	@Value("${max.sql.execution.time.millisec:45000}")
 	private Long maxExecutionTime;
 	
 	@Value(("${report.query.timeout}"))
@@ -78,7 +78,7 @@ public class SearchRepository {
             log.error("Sql query is taking time query:" + query);
 		
 		
-		log.info("Searcher query result:"+maps);
+		//log.info("Searcher query result:"+maps);
 		return searchUtils.convertPGOBjects(maps);
 	}
 

@@ -72,7 +72,8 @@ export const directMapping = async (
       variableTovalueMap[directArr[i].jPath] = fun(directArr[i].val[0]);
     } else if (directArr[i].type == "image") {
       try {
-        var response = await axios.get(directArr[i].url, {
+        const url = directArr[i].url || directArr[i].val[0]
+        var response = await axios.get(url, {
           responseType: "arraybuffer"
         });
         variableTovalueMap[directArr[i].jPath] =

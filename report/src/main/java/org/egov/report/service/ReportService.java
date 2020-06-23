@@ -43,6 +43,18 @@ public class ReportService {
             ReportDefinitions rds = ReportApp.getReportDefs();
             ReportDefinition reportDefinition = new ReportDefinition();
             //   LOGGER.info("updated repot defs " + ReportApp.getReportDefs() + "\n\n\n");
+            
+            List<String> codes = metaDataRequest.getRequestInfo().getUserInfo().getRoles().stream().map(org.egov.common.contract.request.Role::getName).collect(Collectors.toList());
+    		
+            log.info("Module Name: {}, Report Name: {} ",moduleName,metaDataRequest.getReportName());
+            //In PGR module change the report name of EmployeeReport to EscalationOfficerReport if the user is escation officer
+    		if (ReportConstants.PGR_EMPLOYEE_REPORT.equalsIgnoreCase(metaDataRequest.getReportName())
+    				&&	(codes.contains(ReportConstants.ROLE_ESCALATION_OFFICER1) 
+    						|| codes.contains(ReportConstants.ROLE_ESCALATION_OFFICER2))){
+    			log.info("Module Name: {}, Old Report Name: {}, New Report Name: {}",moduleName,metaDataRequest.getReportName(),ReportConstants.PGR_ESCALATION_OFFICER_REPORT);
+    			metaDataRequest.setReportName(ReportConstants.PGR_ESCALATION_OFFICER_REPORT);
+    		}
+            
             reportDefinition = rds.getReportDefinition(moduleName + " " + metaDataRequest.getReportName());
             ReportMetadata rmt = new ReportMetadata();
             if (reportDefinition != null) {
@@ -191,10 +203,12 @@ public class ReportService {
         
         List<String> codes = reportRequest.getRequestInfo().getUserInfo().getRoles().stream().map(org.egov.common.contract.request.Role::getName).collect(Collectors.toList());
 		
+        log.info("Module Name: {}, Report Name: {} ",moduleName,reportRequest.getReportName());
         //In PGR module change the report name of EmployeeReport to EscalationOfficerReport if the user is escation officer
 		if (ReportConstants.PGR_EMPLOYEE_REPORT.equalsIgnoreCase(reportRequest.getReportName())
 				&&	(codes.contains(ReportConstants.ROLE_ESCALATION_OFFICER1) 
 						|| codes.contains(ReportConstants.ROLE_ESCALATION_OFFICER2))){
+			log.info("Module Name: {}, Old Report Name: {}, New Report Name: {}",moduleName,reportRequest.getReportName(),ReportConstants.PGR_ESCALATION_OFFICER_REPORT);
 			reportRequest.setReportName(ReportConstants.PGR_ESCALATION_OFFICER_REPORT);
 		}
         
