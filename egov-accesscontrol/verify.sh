@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-./mvnw clean test verify
+./mvnw clean
