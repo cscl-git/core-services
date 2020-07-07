@@ -8,7 +8,6 @@ import lombok.*;
 import org.egov.pg.constants.TransactionAdditionalFields;
 import org.egov.pg.web.models.User;
 
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
@@ -108,8 +107,6 @@ public class Transaction {
 
 
     @JsonProperty("user")
-    @NotNull
-    @Valid
     private User user;
 
     @JsonProperty("redirectUrl")

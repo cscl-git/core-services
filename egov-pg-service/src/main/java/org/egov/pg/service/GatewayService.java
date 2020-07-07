@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -56,9 +55,7 @@ public class GatewayService {
      * @return list of active gateways that can be used for payments
      */
     public Set<String> getActiveGateways() {
-        return GATEWAY_MAP.entrySet().stream()
-        		.filter(gateway -> gateway.getValue().isActive() == true)
-        		.collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue())).keySet();
+        return GATEWAY_MAP.keySet();
     }
 
     /**

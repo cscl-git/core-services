@@ -11,7 +11,6 @@ import org.egov.pg.web.models.TransactionCriteria;
 import org.egov.pg.web.models.TransactionRequest;
 import org.egov.pg.web.models.User;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +73,7 @@ public class TransactionsApiControllerTest {
     public void transactionsV1CreatePostSuccess() throws Exception {
         TaxAndPayment taxAndPayment = TaxAndPayment.builder()
                 .amountPaid(new BigDecimal("100"))
+                .businessService("PT")
                 .taxAmount(new BigDecimal("100"))
                 .build();
         Transaction transaction = Transaction.builder().txnAmount("100.00")

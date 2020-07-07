@@ -1,20 +1,10 @@
 package org.egov.pg.models;
 
-import java.math.BigDecimal;
-
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-
-import javax.validation.constraints.Size;
+import java.math.BigDecimal;
 
 @Setter
 @Getter
@@ -24,20 +14,16 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class BillAccountDetail {
-
-	@Size(max=64)
+	
 	@JsonProperty("id")
 	private String id = null;
 
-	@Size(max=64)
 	@JsonProperty("tenantId")
 	private String tenantId = null;
 
-	@Size(max=64)
-	@JsonProperty("billDetailId")
-	private String billDetailId = null;
+	@JsonProperty("billDetail")
+	private String billDetail = null;
 
-	@Size(max=64)
 	@JsonProperty("demandDetailId")
 	private String demandDetailId = null;
 
@@ -53,7 +39,9 @@ public class BillAccountDetail {
 	@JsonProperty("isActualDemand")
 	private Boolean isActualDemand = null;
 
-	@Size(max=64)
+	@JsonProperty("glcode")
+	private String glcode = null;
+	
 	@JsonProperty("taxHeadCode")
 	private String taxHeadCode = null;
 
@@ -62,7 +50,4 @@ public class BillAccountDetail {
 
 	@JsonProperty("purpose")
 	private Purpose purpose = null;
-
-	@JsonProperty("auditDetails")
-	private AuditDetails auditDetails;
 }
