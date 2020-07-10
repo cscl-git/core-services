@@ -16,6 +16,14 @@
 		<lombok.version>1.18.8</lombok.version>
 	</properties>
 	<dependencies>
+
+		<dependency>
+			<groupId>com.paytm.pg.merchant</groupId>
+			<artifactId>PaytmChecksum</artifactId>
+			<scope>system</scope>
+			<version>1.0</version>
+			<systemPath>${basedir}\lib\PaytmChecksum.jar</systemPath>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple -->
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
