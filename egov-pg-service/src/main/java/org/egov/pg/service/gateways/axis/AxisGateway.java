@@ -146,6 +146,7 @@ public class AxisGateway implements Gateway {
 				.setCustomerEmail(transaction.getUser().getEmailId() == null ? "" : transaction.getUser().getEmailId());
 		createOrderRequest.setCustomerPhone(transaction.getUser().getMobileNumber());
 		createOrderRequest.setCustomerId(transaction.getUser().getUuid());
+		// createOrderRequest.setCustomerId("134565");
 		createOrderRequest.setReturnUrl(transaction.getCallbackUrl());
 
 		String createOrderResponse = juspayService.createOrder(createOrderRequest);
