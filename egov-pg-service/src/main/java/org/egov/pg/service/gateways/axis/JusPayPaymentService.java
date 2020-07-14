@@ -69,17 +69,14 @@ public class JusPayPaymentService {
 	private String serializeParams(Map<String, String> parameters) {
 
 		StringBuilder bufferUrl = new StringBuilder();
-		try {
-			for (Map.Entry<String, String> entry : parameters.entrySet()) {
-				bufferUrl.append(entry.getKey());
-				bufferUrl.append("=");
-				bufferUrl.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
-				bufferUrl.append("&");
-			}
-		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException("Encoding exception while trying to construct payload", e);
+		for (Map.Entry<String, String> entry : parameters.entrySet()) {
+			bufferUrl.append(entry.getKey());
+			bufferUrl.append("=");
+			bufferUrl.append(entry.getValue());
+			bufferUrl.append("&");
 		}
-		return bufferUrl.toString();
+
+		return bufferUrl.substring(0, bufferUrl.length() - 1);
 	}
 
 	/**
@@ -159,9 +156,14 @@ public class JusPayPaymentService {
 	 */
 	public String createOrder(CreateOrderRequest createOrderRequest) {
 		LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
-		params.put("order_id", createOrderRequest.getOrderId());
-		params.put("amount", String.valueOf(createOrderRequest.getAmount()));
+		params.put("order_id", createOrderRequest.getOrderId() == null ? "" : createOrderRequest.getOrderId());
+		params.put("amount",
+				String.valueOf(createOrderRequest.getAmount() == null ? 0 : createOrderRequest.getAmount()));
 		params.put("customer_id", createOrderRequest.getCustomerId());
+		params.put("currency", createOrderRequest.getCurrency() == null ? "" : createOrderRequest.getCurrency());
+		params.put("return_url", createOrderRequest.getReturnUrl() == null ? "" : createOrderRequest.getReturnUrl());
+
+		/* Below are additional request parameter */
 		params.put("customer_email", createOrderRequest.getCustomerEmail());
 		params.put("customer_phone",
 				createOrderRequest.getCustomerPhone() == null ? "" : createOrderRequest.getCustomerPhone());
@@ -231,15 +233,12 @@ public class JusPayPaymentService {
 		params.put("udf8", createOrderRequest.getUdf8() == null ? "" : createOrderRequest.getUdf8());
 		params.put("udf9", createOrderRequest.getUdf9() == null ? "" : createOrderRequest.getUdf9());
 		params.put("udf10", createOrderRequest.getUdf10() == null ? "" : createOrderRequest.getUdf10());
-		params.put("return_url", createOrderRequest.getReturnUrl() == null ? "" : createOrderRequest.getReturnUrl());
-		String serializedParams = serializeParams(params);
-		System.out.println("serializedParams : "+ serializedParams);
-		
-		String url = baseUrl + "/order/create";
 
+		String serializedParams = serializeParams(params);
+//		System.out.println("serializedParams : " + serializedParams);
+		String url = baseUrl + "/orders";
 		String response = makeServiceCall(url, serializedParams);
-		System.out.println("response :"+response);
-		
+//		System.out.println("response :" + response);
 		JSONObject jsonResponse = (JSONObject) JSONValue.parse(response);
 		String status = (String) jsonResponse.get("status");
 		JSONObject redirectResponse = (JSONObject) jsonResponse.get("payment_links");
@@ -268,8 +267,8 @@ public class JusPayPaymentService {
 		if (orderStatusRequest.getForce() != null && orderStatusRequest.getForce()) {
 			params.put("force", orderStatusRequest.getForce().toString());
 		}
-		String serializedParams = serializeParams(params);
-		String url = baseUrl + "/order_status";
+		String serializedParams = "";
+		String url = baseUrl + "/orders/"+orderStatusRequest.getOrderId();
 
 		String response = makeServiceCall(url, serializedParams);
 		JSONObject jsonResponse = (JSONObject) JSONValue.parse(response);
