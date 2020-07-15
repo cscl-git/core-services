@@ -39,7 +39,8 @@ public class PaytmGateway implements Gateway {
 	private final String INDUSTRY_TYPE_ID;
 	private final String CHANNEL_ID;
 	private final String WEBSITE;
-
+	private final String ORIGINAL_RETURN_URL_KEY;
+	private final String GATEWAY_RETURN_URL;
 	private final boolean ACTIVE;
 
 	private RestTemplate restTemplate;
@@ -56,7 +57,8 @@ public class PaytmGateway implements Gateway {
 		WEBSITE = environment.getRequiredProperty("paytm.merchant.website");
 		MERCHANT_URL_DEBIT = environment.getRequiredProperty("paytm.url.debit");
 		MERCHANT_URL_STATUS = environment.getRequiredProperty("paytm.url.status");
-
+		ORIGINAL_RETURN_URL_KEY = environment.getRequiredProperty("original.return.url.key");
+		GATEWAY_RETURN_URL = environment.getRequiredProperty("gateway.return.url");
 	}
 
 	@Override
@@ -71,7 +73,7 @@ public class PaytmGateway implements Gateway {
 		paramMap.put("WEBSITE", WEBSITE);
 		paramMap.put("EMAIL", transaction.getUser().getEmailId());
 		paramMap.put("MOBILE_NO", transaction.getUser().getMobileNumber());
-		paramMap.put("CALLBACK_URL", transaction.getCallbackUrl());
+		paramMap.put("CALLBACK_URL", getReturnUrl(transaction.getCallbackUrl(), this.GATEWAY_RETURN_URL));
 
 		try {
 
@@ -160,5 +162,10 @@ public class PaytmGateway implements Gateway {
 				.gatewayPaymentMode(resp.getPaymentMode()).gatewayStatusCode(resp.getRespCode())
 				.gatewayStatusMsg(resp.getRespMsg()).responseJson(resp).build();
 
+	}
+
+	private String getReturnUrl(String callbackUrl, String baseurl) {
+		return UriComponentsBuilder.fromHttpUrl(baseurl).queryParam(ORIGINAL_RETURN_URL_KEY, callbackUrl).build()
+				.encode().toUriString();
 	}
 }

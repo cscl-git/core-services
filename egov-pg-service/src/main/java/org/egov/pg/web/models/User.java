@@ -11,28 +11,31 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 public class User {
 
-    private String uuid;
+	private String uuid;
 
-    @NotNull
-    private String name;
+	private Long id;
 
-    private String userName;
+	@NotNull
+	private String name;
 
-    @NotNull
-    private String mobileNumber;
+	private String userName;
 
-    private String emailId;
+	@NotNull
+	private String mobileNumber;
 
-    @NotNull
-    private String tenantId;
+	private String emailId;
 
-    public User(org.egov.common.contract.request.User user) {
-        this.uuid = user.getUuid();
-        this.name = user.getName();
-        this.userName = user.getUserName();
-        this.mobileNumber = user.getMobileNumber();
-        this.emailId = user.getEmailId();
-        this.tenantId = user.getTenantId();
-    }
+	@NotNull
+	private String tenantId;
+
+	public User(org.egov.common.contract.request.User user) {
+		this.uuid = user.getUuid();
+		this.name = user.getName();
+		this.userName = user.getUserName();
+		this.mobileNumber = user.getMobileNumber();
+		this.emailId = user.getEmailId();
+		this.tenantId = user.getTenantId();
+		this.id = user.getId();
+	}
 
 }
