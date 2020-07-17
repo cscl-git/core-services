@@ -88,9 +88,11 @@ public class PaytmGateway implements Gateway {
 			MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 			paramMap.forEach((key, value) -> params.put(key, Collections.singletonList(value)));
 
+			log.info("Paytm Gatway Request Endpoint : " + MERCHANT_URL_DEBIT);
+			log.info("Paytm Gatway Request Parametrs : " + params);
 			UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(MERCHANT_URL_DEBIT).queryParams(params)
 					.build().encode();
-
+			log.info("Paytm Gatway Response : " + uriComponents);
 			return uriComponents.toUri();
 		} catch (Exception e) {
 			log.error("Paytm Checksum generation failed", e);

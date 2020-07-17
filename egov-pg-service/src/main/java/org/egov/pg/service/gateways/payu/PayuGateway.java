@@ -102,6 +102,9 @@ public class PayuGateway implements Gateway {
 		UriComponents uriComponents = UriComponentsBuilder.newInstance().scheme("https").host(MERCHANT_URL_PAY)
 				.path(MERCHANT_PATH_PAY).build();
 
+		log.info("PayU Gatway Request Endpoint : " + MERCHANT_URL_PAY);
+		log.info("PayU Gatway Request Parametrs : " + params);
+		
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -110,6 +113,8 @@ public class PayuGateway implements Gateway {
 
 			URI redirectUri = restTemplate.postForLocation(uriComponents.toUriString(), entity);
 
+			log.info("PayU Gatway Response : " + redirectUri);
+			
 			if (isNull(redirectUri))
 				throw new CustomException("PAYU_REDIRECT_URI_GEN_FAILED", "Failed to generate redirect URI");
 			else

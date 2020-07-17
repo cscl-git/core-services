@@ -27,14 +27,14 @@ public class RedirectController {
 
 	@RequestMapping(value = "/transaction/v1/_redirect", method = RequestMethod.POST, consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	public ResponseEntity<Object> method(@RequestBody MultiValueMap<String, String> formData) {
-
-		System.out.println("formData :" + formData);
+		log.info("redirectmethod() Redirect Request : " + formData);
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.setLocation(UriComponentsBuilder.fromHttpUrl(formData.get(returnUrlKey).get(0))
 				.queryParams(formData).build().encode().toUri());
+		log.info("redirectmethod() Redirect Response : " + httpHeaders);
 		return new ResponseEntity<>(httpHeaders, HttpStatus.FOUND);
 	}
-	
+
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<Object> handleError(Exception e) {
 		log.error("EXCEPTION_WHILE_REDIRECTING", e);
