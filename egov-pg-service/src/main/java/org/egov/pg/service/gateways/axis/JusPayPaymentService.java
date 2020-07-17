@@ -26,11 +26,15 @@ import org.egov.pg.service.gateways.axis.response.GetOrderStatusResponse;
 import org.egov.pg.service.gateways.axis.response.PaymentCardResponse;
 import org.egov.pg.service.gateways.axis.response.PaymentGatewayResponse;
 import org.egov.pg.utils.ISO8601DateParser;
+import org.egov.pg.web.controllers.TransactionsApiController;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 public class JusPayPaymentService {
 
@@ -88,7 +92,8 @@ public class JusPayPaymentService {
 	 * @return HTTP response as string
 	 */
 	private String makeServiceCall(String endPoint, String encodedParams) {
-
+		log.info("Axis Gatway makeServiceCall() Create Order Request Endpoint : " + endPoint);
+		log.info("Axis Gatway makeServiceCall() Create Order Request Parameters : " + encodedParams);
 		HttpsURLConnection connection = null;
 		StringBuilder buffer = new StringBuilder();
 
@@ -123,6 +128,9 @@ public class JusPayPaymentService {
 			String line;
 			while ((line = in.readLine()) != null)
 				buffer.append(line);
+
+			log.info("Axis Gatway makeServiceCall() Create Order Request Success : " + buffer.toString());
+
 			return buffer.toString();
 		} catch (IOException e) {
 			// lets read error stream and print out the reason for failure
@@ -138,11 +146,14 @@ public class JusPayPaymentService {
 					System.out.println(errorBuffer.toString());
 				}
 			} catch (Exception readException) {
+				log.info("Axis Gatway makeServiceCall() Create Order Request Failed : "
+						+ readException.getStackTrace());
 				throw new RuntimeException("Exception while trying to make service call to Juspay", e);
 			}
+			log.info("Axis Gatwate makeServiceCall() Create Order Request Failed : " + e.getStackTrace());
 			throw new RuntimeException("Exception while trying to make service call to Juspay", e);
 		} catch (Exception e) {
-			// log.warn("Exception while trying to make service call to Juspay", e);
+			log.info("Axis Gatway makeServiceCall() Create Order Request Failed : " + e.getStackTrace());
 			throw new RuntimeException("Exception while trying to make service call to Juspay", e);
 		}
 	}
@@ -235,10 +246,10 @@ public class JusPayPaymentService {
 		params.put("udf10", createOrderRequest.getUdf10() == null ? "" : createOrderRequest.getUdf10());
 
 		String serializedParams = serializeParams(params);
-//		System.out.println("serializedParams : " + serializedParams);
+		// System.out.println("serializedParams : " + serializedParams);
 		String url = baseUrl + "/orders";
 		String response = makeServiceCall(url, serializedParams);
-//		System.out.println("response :" + response);
+		// System.out.println("response :" + response);
 		JSONObject jsonResponse = (JSONObject) JSONValue.parse(response);
 		String status = (String) jsonResponse.get("status");
 		JSONObject redirectResponse = (JSONObject) jsonResponse.get("payment_links");
@@ -268,7 +279,7 @@ public class JusPayPaymentService {
 			params.put("force", orderStatusRequest.getForce().toString());
 		}
 		String serializedParams = "";
-		String url = baseUrl + "/orders/"+orderStatusRequest.getOrderId();
+		String url = baseUrl + "/orders/" + orderStatusRequest.getOrderId();
 
 		String response = makeServiceCall(url, serializedParams);
 		JSONObject jsonResponse = (JSONObject) JSONValue.parse(response);
