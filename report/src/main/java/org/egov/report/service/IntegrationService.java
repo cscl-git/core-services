@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
@@ -37,6 +38,13 @@ public class IntegrationService {
 
 	@Value("${egov.mdms.search.endpoint}")
 	private String mdmsEndpoint;
+	
+	@Value("${rainmaker.pgr.host}")
+	private String pgrHost;
+
+	@Value("${rainmaker.pgr.search.endpoint}")
+	private String pgrEndpoint;
+
 
     @Autowired
     private RestTemplate restTemplate;
@@ -166,10 +174,10 @@ public class IntegrationService {
 		List<String> categoryList2=null;
 		try {
 			//Get category list for escalationOfficer1
-			Object result = fetchCategoriesFromAutoroutingEscalationMap(requestInfo, tenantId);
+			Object result = fetchEOCategoriesFromAutoroutingEscalationMap(requestInfo, tenantId);
 			
 			if(null != result) {
-				List objList = JsonPath.read(result, ReportConstants.JSONPATH_AUTOROUTING_MAP_CODES);
+				List objList = JsonPath.read(result, ReportConstants.JSONPATH_AUTOROUTING_MAP_CODES_DB);
 				if(CollectionUtils.isEmpty(objList)) {
 					return null;
 				}
@@ -210,6 +218,24 @@ public class IntegrationService {
 
 	}
     
+    private Object fetchEOCategoriesFromAutoroutingEscalationMap(RequestInfo requestInfo, String tenantId) {
+    	requestInfo.setTs(null);
+		StringBuilder uri = new StringBuilder();
+		uri.append(pgrHost).append(pgrEndpoint);
+		RequestInfoWrapper infoWrapper = generateRequestInfoWrapper(requestInfo);
+		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(uri.toString())
+		        .queryParam("tenantId", tenantId);
+		uri = new StringBuilder();
+		uri.append(builder.toUriString());
+		Object response = null;
+		try {
+			response = serviceRequestRepository.fetchResult(uri, infoWrapper);
+		} catch (Exception e) {
+			log.error("Exception while fetching fetchEOCategoriesFromAutoroutingEscalationMap: " + e);
+		}
+		return response;
+
+	}
     
     private Object fetchCategoriesFromAutoroutingEscalationMap(RequestInfo requestInfo, String tenantId) {
     	requestInfo.setTs(null);

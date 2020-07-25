@@ -47,7 +47,7 @@ public class ReportService {
             List<String> codes = metaDataRequest.getRequestInfo().getUserInfo().getRoles().stream().map(org.egov.common.contract.request.Role::getName).collect(Collectors.toList());
     		
             log.info("Module Name: {}, Report Name: {} ",moduleName,metaDataRequest.getReportName());
-            //In PGR module change the report name of EmployeeReport to EscalationOfficerReport if the user is escation officer
+            //In PGR module change the report name of EmployeeReport to EscalationOfficerReport if the employee is escalation officer
     		if (ReportConstants.PGR_EMPLOYEE_REPORT.equalsIgnoreCase(metaDataRequest.getReportName())
     				&&	(codes.contains(ReportConstants.ROLE_ESCALATION_OFFICER1) 
     						|| codes.contains(ReportConstants.ROLE_ESCALATION_OFFICER2))){
