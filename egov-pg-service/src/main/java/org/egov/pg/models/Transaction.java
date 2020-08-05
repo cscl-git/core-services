@@ -56,7 +56,7 @@ public class Transaction {
     private String module;
 	
 	/**
-	 * Backward compatibility
+	 * Backward compatibility -- Added New Props
 	 */
 	@JsonProperty("moduleId")
 	@Size(min = 1)
