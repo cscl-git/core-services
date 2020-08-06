@@ -46,7 +46,9 @@ public class ExternalEmailService implements EmailService {
 		mailMessage.setTo(email.getToAddress());
 		mailMessage.setSubject(email.getSubject());
 		mailMessage.setText(email.getBody());
+		log.info("Before mail send to {}",email.getToAddress());
 		mailSender.send(mailMessage);
+		log.info("Mail sent successfully to {}",email.getToAddress());
 	}
 
 	private void sendHTMLEmail(Email email) {
@@ -75,10 +77,11 @@ public class ExternalEmailService implements EmailService {
 			throw new RuntimeException(e);
 		}
 		try {
+			log.info("Before mail send to {}",email.getToAddress());
 			mailSender.send(message);
-
+			log.info("Mail sent successfully to {}",email.getToAddress());
 		} catch (MailException e) {
-
+			log.error("Mail sending failed to {}. Trying again...",email.getToAddress());
 			if (e.getMessage().toLowerCase().contains(("IOException").toLowerCase())
 					|| e.getMessage().toLowerCase().contains(("FileNotFoundException").toLowerCase())) {
 				MimeMessage newMessage = mailSender.createMimeMessage();
@@ -90,11 +93,12 @@ public class ExternalEmailService implements EmailService {
 					newHelper.setText((email.getBody()+ "<br> <p style='color:red;'>Note: Email attachment could not be uploaded.</p>"), true);
 				
 					mailSender.send(newMessage);
+					log.info("Mail sent successfully to {}",email.getToAddress());
 				}catch(Exception ex) {
 					log.error(EXCEPTION_MESSAGE, ex);
 					throw new RuntimeException(ex);
 				}
-				}
+			}
 		}
 	}
 }
