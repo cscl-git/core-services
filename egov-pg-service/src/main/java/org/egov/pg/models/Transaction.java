@@ -54,6 +54,13 @@ public class Transaction {
     @JsonProperty("module")
     @Size(min = 1)
     private String module;
+	
+	/**
+	 * Backward compatibility -- Added New Props
+	 */
+	@JsonProperty("moduleId")
+	@Size(min = 1)
+	private String moduleId;
 
     /**
      * Backward compatibility
