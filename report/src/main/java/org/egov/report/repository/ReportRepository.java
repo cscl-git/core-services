@@ -97,7 +97,10 @@ public class ReportRepository {
         Map<String, Object> parameters = getQueryParameters(reportRequest, reportDefinition);
 
         //In PGR get category of escalating officer
-        getQueryParametersOfEOCategory(reportRequest, reportDefinition, parameters);
+        if (ReportConstants.PGR_MODULE.equalsIgnoreCase(reportDefinition.getModuleName())
+    			&& ReportConstants.PGR_ESCALATION_OFFICER_REPORT.equalsIgnoreCase(reportDefinition.getReportName())) {
+        	getQueryParametersOfEOCategory(reportRequest, reportDefinition, parameters);
+        }
         
         MapSqlParameterSource params =  new MapSqlParameterSource(parameters);
         log.info("final query:" + query);
@@ -127,23 +130,19 @@ public class ReportRepository {
 
     
     private void getQueryParametersOfEOCategory(ReportRequest reportRequest, ReportDefinition reportDefinition, Map<String, Object> parameters) {
-    	if (ReportConstants.PGR_MODULE.equalsIgnoreCase(reportDefinition.getModuleName())
-    			&& ReportConstants.PGR_ESCALATION_OFFICER_REPORT.equalsIgnoreCase(reportDefinition.getReportName())) {
-        		
-    		Map<String,List<String>> categoryList = integrationService.fetchCategoriesForEscalationOfficer(reportRequest.getRequestInfo(), reportRequest.getTenantId());
-    		List<String> emptyString = new ArrayList<String>();
-    		emptyString.add(" ");
-    		
-    		if(!CollectionUtils.isEmpty(categoryList.get(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER1_NAME))) {
-    			parameters.put("categoryFor1stLevel", categoryList.get(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER1_NAME));
-    		}else {
-    			parameters.put("categoryFor1stLevel", emptyString);
-    		}
-    		if(!CollectionUtils.isEmpty(categoryList.get(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER2_NAME))) {
-    			parameters.put("categoryFor2ndLevel", categoryList.get(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER2_NAME));
-    		}else {
-    			parameters.put("categoryFor2ndLevel", emptyString);
-    		}
-        }
+		Map<String,List<String>> categoryList = integrationService.fetchCategoriesForEscalationOfficer(reportRequest.getRequestInfo(), reportRequest.getTenantId());
+		List<String> emptyString = new ArrayList<String>();
+		emptyString.add(" ");
+		
+		if(!CollectionUtils.isEmpty(categoryList.get(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER1_NAME))) {
+			parameters.put("categoryFor1stLevel", categoryList.get(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER1_NAME));
+		}else {
+			parameters.put("categoryFor1stLevel", emptyString);
+		}
+		if(!CollectionUtils.isEmpty(categoryList.get(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER2_NAME))) {
+			parameters.put("categoryFor2ndLevel", categoryList.get(ReportConstants.MDMS_AUTOROUTING_ESCALATION_OFFICER2_NAME));
+		}else {
+			parameters.put("categoryFor2ndLevel", emptyString);
+		}
     }
 }

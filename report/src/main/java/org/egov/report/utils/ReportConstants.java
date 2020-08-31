@@ -11,6 +11,7 @@ public class ReportConstants {
 	public static final String MDMS_PGR_MOD_NAME = "RAINMAKER-PGR";
 	public static final String MDMS_AUTOROUTING_ESCALATION_MAP_MASTER_NAME = "AutoroutingEscalationMap";
 	public static final String JSONPATH_AUTOROUTING_MAP_CODES = "$.MdmsRes.RAINMAKER-PGR.AutoroutingEscalationMap";
+	public static final String JSONPATH_AUTOROUTING_MAP_CODES_DB = "$.autoroutingmap.autorouting";
 	public static final String AUTOROUTING_ESCALATING_OFFICER1_JSONPATH = "$.escalationOfficer1";
 	public static final String AUTOROUTING_ESCALATING_OFFICER2_JSONPATH = "$.escalationOfficer2";
 	public static final String AUTOROUTING_CATEGORY_JSONPATH = "$.category";
