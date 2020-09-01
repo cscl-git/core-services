@@ -8,8 +8,11 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.egov.common.contract.request.User;
+import org.json.simple.JSONObject;
 import org.springframework.validation.annotation.Validated;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.annotations.ApiModel;
@@ -102,6 +105,9 @@ public class ProcessInstance   {
         @JsonProperty("auditDetails")
         private AuditDetails auditDetails = null;
 
+        @JsonProperty("additionalDetails")
+        @JsonInclude(Include.NON_NULL)
+        private JSONObject additionalDetails = null;
 
         public ProcessInstance addDocumentsItem(Document documentsItem) {
             if (this.documents == null) {
