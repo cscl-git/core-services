@@ -85,7 +85,8 @@ public class AuthPreCheckFilter extends ZuulFilter {
             authToken = getAuthTokenFromRequest();
         } catch (IOException e) {
             logger.error(AUTH_TOKEN_RETRIEVE_FAILURE_MESSAGE, e);
-            ExceptionUtils.RaiseException(e);
+            //ExceptionUtils.RaiseException(e);
+            ExceptionUtils.raiseCustomException(HttpStatus.BAD_REQUEST, AUTH_TOKEN_RETRIEVE_FAILURE_MESSAGE + ", Either request header or body is not valid");            
             return null;
         }
         RequestContext.getCurrentContext().set(AUTH_TOKEN_KEY, authToken);
