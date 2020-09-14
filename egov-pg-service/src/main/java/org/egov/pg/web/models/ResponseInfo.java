@@ -20,6 +20,7 @@ import javax.validation.constraints.Size;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@ToString
 public class ResponseInfo {
 
     @JsonProperty("apiId")

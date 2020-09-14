@@ -1,6 +1,9 @@
 package org.egov.pg.web.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.egov.pg.models.RefundTransaction;
+import org.egov.pg.models.RefundTransactionRequest;
 import org.egov.pg.models.Transaction;
 import org.egov.pg.service.GatewayService;
 import org.egov.pg.service.TransactionService;
@@ -51,7 +54,7 @@ public class TransactionsApiController {
 		ResponseInfo responseInfo = ResponseInfoFactory
 				.createResponseInfoFromRequestInfo(transactionRequest.getRequestInfo(), true);
 		TransactionCreateResponse response = new TransactionCreateResponse(responseInfo, transaction);
-		log.info("transactionsV1CreatePost() Create Response : " + transactionRequest);
+		log.info("transactionsV1CreatePost() Create Response : " + response);
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
@@ -109,6 +112,36 @@ public class TransactionsApiController {
 		Set<String> gateways = gatewayService.getActiveGateways();
 		log.debug("Available gateways : " + gateways);
 		return new ResponseEntity<>(gateways, HttpStatus.OK);
+	}
+
+	@RequestMapping(value = "/transaction/v1/_refund", method = RequestMethod.POST)
+	public ResponseEntity<RefundTransactionResponse> transactionsV1CreateRefundPost(
+			@Valid @RequestBody RefundTransactionRequest transactionRequest) {
+		log.info("transactionsV1CreateRefundPost() Create Request : " + transactionRequest);
+		List<RefundTransaction> refundTransaction = transactionService.initiateRefundTransaction(transactionRequest);
+		ResponseInfo responseInfo = ResponseInfoFactory
+				.createResponseInfoFromRequestInfo(transactionRequest.getRequestInfo(), true);
+		RefundTransactionResponse response = new RefundTransactionResponse(responseInfo, refundTransaction);
+		log.info("transactionsV1CreateRefundPost() Create Response : " + response);
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
+
+	/**
+	 * Updates the status of the transaction from the gateway
+	 *
+	 * @param params
+	 *            Parameters posted by the gateway
+	 * @return The current transaction status of the transaction
+	 */
+	@RequestMapping(value = "/transaction/v1/_updateRefund", method = { RequestMethod.POST, RequestMethod.GET })
+	public ResponseEntity<RefundTransactionResponse> transactionsV1RefundUpdatePost(
+			@RequestBody RequestInfoWrapper requestInfoWrapper, @RequestParam Map<String, String> params) {
+		List<RefundTransaction> refundTransactions = transactionService
+				.updateRefundTransaction(requestInfoWrapper.getRequestInfo(), params);
+		ResponseInfo responseInfo = ResponseInfoFactory
+				.createResponseInfoFromRequestInfo(requestInfoWrapper.getRequestInfo(), true);
+		RefundTransactionResponse response = new RefundTransactionResponse(responseInfo, refundTransactions);
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
 }

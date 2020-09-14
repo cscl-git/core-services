@@ -3,6 +3,8 @@ package org.egov.pg.service.gateways.payu;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+
+import org.egov.pg.models.RefundTransaction;
 import org.egov.pg.models.Transaction;
 import org.egov.pg.service.Gateway;
 import org.egov.pg.utils.Utils;
@@ -104,7 +106,7 @@ public class PayuGateway implements Gateway {
 
 		log.info("PayU Gatway Request Endpoint : " + MERCHANT_URL_PAY);
 		log.info("PayU Gatway Request Parametrs : " + params);
-		
+
 		try {
 			HttpHeaders headers = new HttpHeaders();
 			headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -114,7 +116,7 @@ public class PayuGateway implements Gateway {
 			URI redirectUri = restTemplate.postForLocation(uriComponents.toUriString(), entity);
 
 			log.info("PayU Gatway Response : " + redirectUri);
-			
+
 			if (isNull(redirectUri))
 				throw new CustomException("PAYU_REDIRECT_URI_GEN_FAILED", "Failed to generate redirect URI");
 			else
@@ -270,6 +272,18 @@ public class PayuGateway implements Gateway {
 		}
 
 		return hexString.toString();
+	}
+
+	@Override
+	public RefundTransaction initiateRefund(RefundTransaction transaction) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public RefundTransaction fetchRefundStatus(RefundTransaction currentStatus) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

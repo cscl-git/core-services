@@ -1,13 +1,17 @@
 package org.egov.pg.service.gateways.paytm;
 
-import com.paytm.pg.merchant.CheckSumServiceHelper;
-import com.paytm.pg.merchant.PaytmChecksum;
+import java.net.URI;
+import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 
-import lombok.extern.slf4j.Slf4j;
+import org.egov.pg.models.RefundTransaction;
 import org.egov.pg.models.Transaction;
 import org.egov.pg.service.Gateway;
 import org.egov.pg.utils.Utils;
 import org.egov.tracer.model.CustomException;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
@@ -22,10 +26,10 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
-import java.util.Collections;
-import java.util.Map;
-import java.util.TreeMap;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.paytm.pg.merchant.PaytmChecksum;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -43,7 +47,13 @@ public class PaytmGateway implements Gateway {
 	private final String GATEWAY_RETURN_URL;
 	private final boolean ACTIVE;
 
+	private final String MERCHANT_URL_REFUND;
+	private final String MERCHANT_URL_REFUND_STATUS;
+
 	private RestTemplate restTemplate;
+
+	@Autowired
+	private ObjectMapper objectMapper;
 
 	@Autowired
 	public PaytmGateway(RestTemplate restTemplate, Environment environment) {
@@ -59,6 +69,9 @@ public class PaytmGateway implements Gateway {
 		MERCHANT_URL_STATUS = environment.getRequiredProperty("paytm.url.status");
 		ORIGINAL_RETURN_URL_KEY = environment.getRequiredProperty("original.return.url.key");
 		GATEWAY_RETURN_URL = environment.getRequiredProperty("gateway.return.url");
+
+		MERCHANT_URL_REFUND = environment.getRequiredProperty("paytm.url.refund");
+		MERCHANT_URL_REFUND_STATUS = environment.getRequiredProperty("paytm.url.refund.status");
 	}
 
 	@Override
@@ -71,6 +84,7 @@ public class PaytmGateway implements Gateway {
 		paramMap.put("CHANNEL_ID", CHANNEL_ID);
 		paramMap.put("TXN_AMOUNT", Utils.formatAmtAsRupee(transaction.getTxnAmount()));
 		paramMap.put("WEBSITE", WEBSITE);
+		paramMap.put("MERC_UNQ_REF", transaction.getModule());
 		paramMap.put("EMAIL", transaction.getUser().getEmailId());
 		paramMap.put("MOBILE_NO", transaction.getUser().getMobileNumber());
 		paramMap.put("CALLBACK_URL", getReturnUrl(transaction.getCallbackUrl(), this.GATEWAY_RETURN_URL));
@@ -112,16 +126,17 @@ public class PaytmGateway implements Gateway {
 			// CheckSumServiceHelper.getCheckSumServiceHelper().genrateCheckSum(MERCHANT_KEY,
 			// treeMap);
 			String checkSum = PaytmChecksum.generateSignature(treeMap, MERCHANT_KEY);
-
 			treeMap.put("CHECKSUMHASH", checkSum);
 
 			HttpHeaders httpHeaders = new HttpHeaders();
 			httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString());
-
 			HttpEntity<Map<String, String>> httpEntity = new HttpEntity<>(treeMap, httpHeaders);
-
 			ResponseEntity<PaytmResponse> response = restTemplate.postForEntity(MERCHANT_URL_STATUS, httpEntity,
 					PaytmResponse.class);
+
+			ObjectMapper mapper = new ObjectMapper();
+			log.info("Paytm Status Request Body :" + mapper.writeValueAsString(treeMap));
+			log.info("Paytm Status Response Body :" + mapper.writeValueAsString(response));
 
 			return transformRawResponse(response.getBody(), currentStatus);
 
@@ -169,5 +184,90 @@ public class PaytmGateway implements Gateway {
 	private String getReturnUrl(String callbackUrl, String baseurl) {
 		return UriComponentsBuilder.fromHttpUrl(baseurl).queryParam(ORIGINAL_RETURN_URL_KEY, callbackUrl).build()
 				.encode().toUriString();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public RefundTransaction initiateRefund(RefundTransaction transaction) {
+		JSONObject paytmParams = new JSONObject();
+		
+		JSONObject body = new JSONObject();
+		body.put("mid", MID);
+		body.put("txnType", "REFUND");
+		body.put("orderId", transaction.getTxnId());
+		body.put("txnId",transaction.getGatewayTxnId());
+		body.put("refId",  transaction.getTxnId());
+		body.put("refundAmount", transaction.getRefundAmount());
+		try {
+			String checkSum = PaytmChecksum.generateSignature(body.toString(), MERCHANT_KEY);
+			JSONObject head = new JSONObject();
+			head.put("signature", checkSum);
+			paytmParams.put("body", body);
+			paytmParams.put("head", head);
+			String post_data = paytmParams.toString();
+			HttpHeaders httpHeaders = new HttpHeaders();
+			httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString());
+			HttpEntity<String> httpEntity = new HttpEntity<>(post_data, httpHeaders);
+			ResponseEntity<String> response = restTemplate.postForEntity(MERCHANT_URL_REFUND, httpEntity, String.class);
+			JSONObject jsonObject = (JSONObject) new JSONParser().parse(response.getBody().toString());
+			PaytmRefundResponse paytmRefundResponse = objectMapper.convertValue(jsonObject.get("body"), PaytmRefundResponse.class);
+			transaction.setResponseJson(response.getBody());
+			transaction.setAdditionalDetails(response.getBody());
+			return transformRufundResponse(paytmRefundResponse, transaction);
+		} catch (RestClientException e) {
+			log.error("Unable to Refund from Paytm gateway", e);
+			throw new CustomException("UNABLE_TO_REFUND", "Unable to Refund from Paytm gateway");
+		} catch (Exception e) {
+			log.error("Paytm Checksum generation failed", e);
+			throw new CustomException("CHECKSUM_GEN_FAILED",
+					"Hash generation failed, gateway redirect URI cannot be generated");
+		}
+	}
+
+	private RefundTransaction transformRufundResponse(PaytmRefundResponse resp, RefundTransaction currentStatus) {
+		currentStatus.setGatewayRefundStatusCode(resp.getResultInfo().getResultCode());
+		currentStatus.setTxnStatus(resp.getResultInfo().getResultStatus());
+		currentStatus.setGatewayRefundStatusMsg(resp.getResultInfo().getResultMsg());
+		currentStatus.setGatewayRefundTxnId(resp.getRefundId());
+		currentStatus.setTxnStatusMsg(resp.getResultInfo().getResultMsg());
+		return currentStatus;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public RefundTransaction fetchRefundStatus(RefundTransaction transaction) {
+		JSONObject paytmParams = new JSONObject();
+
+		JSONObject body = new JSONObject();
+		body.put("mid", MID);
+		body.put("orderId", transaction.getTxnId());
+		body.put("refId",  transaction.getTxnId());
+
+		try {
+			String checkSum = PaytmChecksum.generateSignature(body.toString(), MERCHANT_KEY);
+			JSONObject head = new JSONObject();
+			head.put("signature", checkSum);
+			paytmParams.put("body", body);
+			paytmParams.put("head", head);
+			String post_data = paytmParams.toString();
+			HttpHeaders httpHeaders = new HttpHeaders();
+			httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString());
+			HttpEntity<String> httpEntity = new HttpEntity<>(post_data, httpHeaders);
+			ResponseEntity<String> response = restTemplate.postForEntity(MERCHANT_URL_REFUND_STATUS, httpEntity,
+					String.class);
+			JSONObject jsonObject = (JSONObject) new JSONParser().parse(response.getBody().toString());
+			PaytmRefundResponse paytmRefundResponse = objectMapper.convertValue(jsonObject.get("body"), PaytmRefundResponse.class);
+			transaction.setResponseJson(response.getBody());
+			transaction.setAdditionalDetails(response.getBody());
+			return transformRufundResponse(paytmRefundResponse, transaction);
+
+		} catch (RestClientException e) {
+			log.error("Unable to fetch Refund status from Paytm gateway", e);
+			throw new CustomException("UNABLE_TO_FETCH_REFUND", "Unable to Fetch Refund Status from Paytm gateway");
+		} catch (Exception e) {
+			log.error("Paytm Checksum generation failed", e);
+			throw new CustomException("CHECKSUM_GEN_FAILED",
+					"Hash generation failed, gateway redirect URI cannot be generated");
+		}
 	}
 }

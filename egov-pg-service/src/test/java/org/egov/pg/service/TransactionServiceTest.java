@@ -98,6 +98,7 @@ public class TransactionServiceTest {
                 .billId("ORDER0012")
                 .productInfo("Property Tax Payment")
                 .gateway("PAYTM")
+                .module("module")
                 .build();
         TransactionRequest transactionRequest = new TransactionRequest(requestInfo, txn);
 
@@ -120,6 +121,7 @@ public class TransactionServiceTest {
                 .billId("ORDER0012")
                 .productInfo("Property Tax Payment")
                 .gateway("ABCD123")
+                .module("module")
                 .build();
         TransactionRequest transactionRequest = new TransactionRequest(requestInfo, txn);
 
@@ -139,6 +141,7 @@ public class TransactionServiceTest {
                 .billId("ORDER0012")
                 .productInfo("Property Tax Payment")
                 .gateway("ABCD123")
+                .module("module")
                 .txnAmount("0")
                 .build();
         TransactionRequest transactionRequest = new TransactionRequest(requestInfo, txn);
@@ -162,6 +165,7 @@ public class TransactionServiceTest {
         Transaction txn = Transaction.builder().txnId("PT_001")
                 .txnAmount("100")
                 .tenantId("pb")
+                .module("module")
                 .billId("ORDER0012")
                 .productInfo("Property Tax Payment")
                 .gateway("ABCD123")
@@ -192,6 +196,7 @@ public class TransactionServiceTest {
         Transaction txnStatus = Transaction.builder().txnId("PT_001")
                 .txnAmount("100")
                 .billId("ORDER0012")
+                .module("module")
                 .txnStatus(Transaction.TxnStatusEnum.PENDING)
                 .productInfo("Property Tax Payment")
                 .gateway("PAYTM")
@@ -200,6 +205,7 @@ public class TransactionServiceTest {
         Transaction finalTxnStatus = Transaction.builder().txnId("PT_001")
                 .txnAmount("100.00")
                 .billId("ORDER0012")
+                .module("module")
                 .txnStatus(Transaction.TxnStatusEnum.SUCCESS)
                 .productInfo("Property Tax Payment")
                 .gateway("PAYTM")

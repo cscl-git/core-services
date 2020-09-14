@@ -3,6 +3,7 @@ package org.egov.pg.service.gateways.axis;
 import java.net.URI;
 import java.util.Map;
 
+import org.egov.pg.models.RefundTransaction;
 import org.egov.pg.models.Transaction;
 import org.egov.pg.models.Transaction.TxnStatusEnum;
 import org.egov.pg.service.Gateway;
@@ -117,5 +118,17 @@ public class AxisGateway implements Gateway {
 	@Override
 	public String transactionIdKeyInResponse() {
 		return "";
+	}
+
+	@Override
+	public RefundTransaction initiateRefund(RefundTransaction transaction) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public RefundTransaction fetchRefundStatus(RefundTransaction currentStatus) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

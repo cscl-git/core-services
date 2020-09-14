@@ -136,6 +136,7 @@ public class TransactionValidatorTest {
     public void validateUpdateTxnSuccess() {
         Transaction txnStatus = Transaction.builder().txnId("PT_001")
                 .txnAmount("100")
+                .module("module")
                 .billId("ORDER0012")
                 .txnStatus(Transaction.TxnStatusEnum.PENDING)
                 .productInfo("Property Tax Payment")

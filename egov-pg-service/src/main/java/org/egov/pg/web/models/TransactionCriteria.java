@@ -15,6 +15,8 @@ public class TransactionCriteria {
     private String tenantId;
 
     private String txnId;
+    
+    private String txnRefundId;
 
     private String billId;
 

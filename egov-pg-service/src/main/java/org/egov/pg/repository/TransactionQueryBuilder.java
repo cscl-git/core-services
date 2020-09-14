@@ -8,16 +8,28 @@ import java.util.*;
 class TransactionQueryBuilder {
     private static final String SEARCH_TXN_SQL = "SELECT pg.txn_id, pg.txn_amount, pg.txn_status, pg.txn_status_msg, " +
             "pg.gateway, pg.module, pg.consumer_code, pg.bill_id, pg.product_info, pg.user_uuid, pg.user_name, pg" +
-            ".mobile_number, pg.email_id, pg.name, pg.user_tenant_id, pg.tenant_id, pg.gateway_txn_id, pg.gateway_payment_mode, " +
+            ".mobile_number, pg.email_id, pg.name, pg.module,pg.user_tenant_id, pg.tenant_id, pg.gateway_txn_id, pg.gateway_payment_mode, " +
             "pg.gateway_status_code, pg.gateway_status_msg, pg.receipt, pg.additional_details,  pg.created_by, pg" +
             ".created_time, pg.last_modified_by, pg.last_modified_time " +
             "FROM eg_pg_transactions pg ";
+    
+    private static final String SEARCH_REFUND_TXN_SQL = "SELECT pg.txn_refund_id, pg.txn_id, pg.tenant_id, pg.txn_amount, pg.txn_refund_amount, " +
+            "pg.txn_refund_status, pg.txn_refund_status_msg, pg.gateway, pg.gateway_txn_id, pg.gateway_refund_txn_id, pg.gateway_refund_status_code, pg.gateway_refund_status_msg," +
+            "pg.refund_additional_details, pg.created_by, pg.created_time, pg.last_modified_by, pg.last_modified_time " +
+            "FROM eg_pg_transactions_refund pg ";
 
     private TransactionQueryBuilder() {
     }
 
     static String getPaymentSearchQueryByCreatedTimeRange(TransactionCriteria transactionCriteria, List<Object> preparedStmtList) {
         String query = buildQuery(transactionCriteria, preparedStmtList);
+        query = addOrderByClause(query);
+        query = addPagination(query, transactionCriteria, preparedStmtList);
+        return query;
+    }
+    
+    static String getPaymentSearchRefundQueryByCreatedTimeRange(TransactionCriteria transactionCriteria, List<Object> preparedStmtList) {
+        String query = buildQueryRefund(transactionCriteria, preparedStmtList);
         query = addOrderByClause(query);
         query = addPagination(query, transactionCriteria, preparedStmtList);
         return query;
@@ -99,6 +111,43 @@ class TransactionQueryBuilder {
 
         return builder.toString();
     }
+    
+    
+    private static String buildQueryRefund(TransactionCriteria transactionCriteria, List<Object> preparedStmtList) {
+        StringBuilder builder = new StringBuilder(TransactionQueryBuilder.SEARCH_REFUND_TXN_SQL);
+        Map<String, Object> queryParams = new HashMap<>();
+
+        if (!Objects.isNull(transactionCriteria.getTenantId())) {
+            queryParams.put("pg.tenant_id", transactionCriteria.getTenantId());
+        }
+
+        if (!Objects.isNull(transactionCriteria.getTxnId())) {
+            queryParams.put("pg.txn_id", transactionCriteria.getTxnId());
+        }
+
+        if (!Objects.isNull(transactionCriteria.getTxnRefundId())) {
+            queryParams.put("pg.txn_refund_id", transactionCriteria.getTxnRefundId());
+        }
+
+        if (!queryParams.isEmpty()) {
+
+            builder.append(" WHERE ");
+
+            Iterator<Map.Entry<String, Object>> iterator = queryParams.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<String, Object> entry = iterator.next();
+                builder.append(entry.getKey()).append(" = ? ");
+
+                preparedStmtList.add(entry.getValue());
+
+                if (iterator.hasNext())
+                    builder.append(" AND ");
+            }
+        }
+
+        return builder.toString();
+    }
+
 
     private static String addPagination(String query, TransactionCriteria transactionCriteria, List<Object>
             preparedStmtList){

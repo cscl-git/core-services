@@ -1,12 +1,17 @@
 package org.egov.pg.service;
 
+import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.egov.common.contract.request.RequestInfo;
 import org.egov.pg.config.AppProperties;
+import org.egov.pg.models.RefundTransaction;
+import org.egov.pg.models.RefundTransactionRequest;
 import org.egov.pg.models.Transaction;
 import org.egov.pg.models.TransactionDump;
 import org.egov.pg.models.TransactionDumpRequest;
@@ -64,7 +69,7 @@ public class TransactionService {
 	 * @return Redirect URI to the gateway for the particular transaction
 	 */
 	public Transaction initiateTransaction(TransactionRequest transactionRequest) {
-		validator.validateCreateTxn(transactionRequest);
+		//validator.validateCreateTxn(transactionRequest);
 
 		// Enrich transaction by generating txnid, audit details, default status
 		enrichmentService.enrichCreateTransaction(transactionRequest);
@@ -77,7 +82,7 @@ public class TransactionService {
 
 		if (validator.skipGateway(transaction)) {
 			transaction.setTxnStatus(Transaction.TxnStatusEnum.SUCCESS);
-			paymentsService.registerPayment(transactionRequest);
+//			paymentsService.registerPayment(transactionRequest);
 		} else {
 			URI uri = gatewayService.initiateTxn(transaction);
 			transaction.setRedirectUrl(uri.toString());
@@ -148,7 +153,7 @@ public class TransactionService {
 		if (validator.shouldGenerateReceipt(currentTxnStatus, newTxn)) {
 			TransactionRequest request = TransactionRequest.builder().requestInfo(requestInfo).transaction(newTxn)
 					.build();
-			paymentsService.registerPayment(request);
+			// paymentsService.registerPayment(request);
 		}
 
 		TransactionDump dump = TransactionDump.builder().txnId(currentTxnStatus.getTxnId())
@@ -159,6 +164,40 @@ public class TransactionService {
 		producer.push(appProperties.getUpdateTxnDumpTopic(), new TransactionDumpRequest(requestInfo, dump));
 
 		return Collections.singletonList(newTxn);
+	}
+
+	public List<RefundTransaction> initiateRefundTransaction(RefundTransactionRequest transactionRequest) {
+		Map<String, String> requestParams = new HashMap<>();
+		requestParams.put("txnId", transactionRequest.getRefundTransaction().getTxnId());
+		Transaction currentTxnStatus = validator.validateUpdateTxn(requestParams);
+		transactionRequest.getRefundTransaction().setGateway(currentTxnStatus.getGateway());
+		transactionRequest.getRefundTransaction().setTxnAmount(currentTxnStatus.getTxnAmount());
+
+		validator.validateRefundCreateTxn(transactionRequest);
+
+		// Enrich transaction by generating txnid, audit details, default status
+		enrichmentService.enrichRefundCreateTransaction(transactionRequest, currentTxnStatus);
+		RefundTransaction newTransaction = gatewayService.initiateRefundTxn(transactionRequest.getRefundTransaction());
+
+		transactionRequest.setRefundTransaction(newTransaction);
+		producer.push(appProperties.getSaveRefundTxnTopic(), transactionRequest);
+		return Collections.singletonList(newTransaction);
+	}
+
+	public List<RefundTransaction> updateRefundTransaction(RequestInfo requestInfo, Map<String, String> params) {
+
+		RefundTransaction currentTxnStatus = validator.validateUpdateRefundTxn(params);
+		RefundTransaction newTxn = gatewayService.getLiveRefundStatus(currentTxnStatus);
+
+		// Enrich the new transaction status before persisting
+		enrichmentService.enrichUpdateRefundTransaction(new RefundTransactionRequest(requestInfo, currentTxnStatus),
+				newTxn);
+
+		producer.push(appProperties.getSaveRefundTxnTopic(),
+				new org.egov.pg.models.RefundTransactionRequest(requestInfo, newTxn));
+
+		return Collections.singletonList(newTxn);
+
 	}
 
 }

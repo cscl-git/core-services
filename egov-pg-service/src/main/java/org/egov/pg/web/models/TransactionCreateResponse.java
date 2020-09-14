@@ -11,6 +11,7 @@ import javax.validation.Valid;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@ToString
 public class TransactionCreateResponse {
 
     @JsonProperty("ResponseInfo")
