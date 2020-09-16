@@ -69,7 +69,7 @@ public class TransactionService {
 	 * @return Redirect URI to the gateway for the particular transaction
 	 */
 	public Transaction initiateTransaction(TransactionRequest transactionRequest) {
-		//validator.validateCreateTxn(transactionRequest);
+		validator.validateCreateTxn(transactionRequest);
 
 		// Enrich transaction by generating txnid, audit details, default status
 		enrichmentService.enrichCreateTransaction(transactionRequest);
@@ -82,7 +82,7 @@ public class TransactionService {
 
 		if (validator.skipGateway(transaction)) {
 			transaction.setTxnStatus(Transaction.TxnStatusEnum.SUCCESS);
-//			paymentsService.registerPayment(transactionRequest);
+			paymentsService.registerPayment(transactionRequest);
 		} else {
 			URI uri = gatewayService.initiateTxn(transaction);
 			transaction.setRedirectUrl(uri.toString());
@@ -153,7 +153,7 @@ public class TransactionService {
 		if (validator.shouldGenerateReceipt(currentTxnStatus, newTxn)) {
 			TransactionRequest request = TransactionRequest.builder().requestInfo(requestInfo).transaction(newTxn)
 					.build();
-			// paymentsService.registerPayment(request);
+			paymentsService.registerPayment(request);
 		}
 
 		TransactionDump dump = TransactionDump.builder().txnId(currentTxnStatus.getTxnId())
