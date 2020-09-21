@@ -13,13 +13,27 @@ class TransactionQueryBuilder {
             ".created_time, pg.last_modified_by, pg.last_modified_time " +
             "FROM eg_pg_transactions pg ";
     
-    private static final String SEARCH_REFUND_TXN_SQL = "SELECT pg.txn_refund_id, pg.txn_id, pg.tenant_id, pg.txn_amount, pg.txn_refund_amount, " +
-            "pg.txn_refund_status, pg.txn_refund_status_msg, pg.gateway, pg.gateway_txn_id, pg.gateway_refund_txn_id, pg.gateway_refund_status_code, pg.gateway_refund_status_msg," +
-            "pg.refund_additional_details, pg.created_by, pg.created_time, pg.last_modified_by, pg.last_modified_time " +
-            "FROM eg_pg_transactions_refund pg ";
+    private static final String SEARCH_REFUND_TXN_SQL = "SELECT pg.txn_refund_id" + 
+					    		" ,pg.txn_id" + 
+					    		" ,pg.tenant_id" + 
+					    		" ,pg.txn_amount" + 
+					    		" ,pg.txn_refund_amount" + 
+					    		" ,pg.txn_refund_status" + 
+					    		" ,pg.txn_refund_status_msg" + 
+					    		" ,pg.gateway" + 
+					    		" ,pg.gateway_txn_id" + 
+					    		" ,pg.gateway_refund_txn_id" + 
+					    		" ,pg.gateway_refund_status_code" + 
+					    		" ,pg.gateway_refund_status_msg" + 
+					    		" ,pg.refund_additional_details" + 
+					    		" ,pg.created_by" + 
+					    		" ,pg.created_time" + 
+					    		" ,pg.last_modified_by" + 
+					    		" ,pg.last_modified_time" + 
+					    		" FROM eg_pg_transactions_refund pg" + 
+					    		" INNER JOIN eg_pg_transactions pgt ON pg.txn_id=pgt.txn_id AND pgt.txn_status='SUCCESS' ";
 
-    private TransactionQueryBuilder() {
-    }
+    private TransactionQueryBuilder() {}
 
     static String getPaymentSearchQueryByCreatedTimeRange(TransactionCriteria transactionCriteria, List<Object> preparedStmtList) {
         String query = buildQuery(transactionCriteria, preparedStmtList);
@@ -127,6 +141,10 @@ class TransactionQueryBuilder {
 
         if (!Objects.isNull(transactionCriteria.getTxnRefundId())) {
             queryParams.put("pg.txn_refund_id", transactionCriteria.getTxnRefundId());
+        }
+        
+        if (!Objects.isNull(transactionCriteria.getConsumerCode())) {
+            queryParams.put("pgt.consumer_code", transactionCriteria.getConsumerCode());
         }
 
         if (!queryParams.isEmpty()) {
