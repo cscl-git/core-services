@@ -204,21 +204,16 @@ public class TransactionValidator {
 	}
 
 	public RefundTransaction validateUpdateRefundTxn(Map<String, String> params) {
-
 		String txnRefundId = params.get("txnRefundId");
-		if (StringUtils.isEmpty(txnRefundId))
-			throw new CustomException("MISSING_UPDATE_TXN_REFUND_ID",
-					"Cannot process request, missing transaction refund id");
-
-		TransactionCriteria criteria = TransactionCriteria.builder().txnRefundId(txnRefundId).build();
+		String consumerCode = params.get("consumerCode");
+		String tenantId = params.get("tenantId");
+		if (StringUtils.isEmpty(txnRefundId) && StringUtils.isEmpty(consumerCode))
+			throw new CustomException("MISSING_UPDATE_TXN_REFUND_ID", "Cannot process request, missing transaction refund id");
+		TransactionCriteria criteria = TransactionCriteria.builder().txnRefundId(txnRefundId).consumerCode(consumerCode).tenantId(tenantId).build();
 		List<RefundTransaction> statuses = transactionRepository.fetchRefundTransactions(criteria);
-
 		if (statuses.isEmpty()) {
 			throw new CustomException("REFUND_TXN_UPDATE_NOT_FOUND", "Refund Transaction not found");
 		}
-
 		return statuses.get(0);
-
 	}
-
 }
