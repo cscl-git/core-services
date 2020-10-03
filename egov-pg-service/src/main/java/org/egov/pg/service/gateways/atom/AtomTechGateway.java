@@ -153,7 +153,7 @@ public class AtomTechGateway implements Gateway {
 	@Override
 	public boolean isActive() {
 
-		return true;
+		return ACTIVE;
 	}
 
 	@Override
