@@ -36,8 +36,8 @@ app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
 let maxPagesAllowed = envVariables.MAX_NUMBER_PAGES;
 let serverport = envVariables.SERVER_PORT;
 
-//let dataConfigUrls = envVariables.DATA_CONFIG_URLS;
-//let formatConfigUrls = envVariables.FORMAT_CONFIG_URLS;
+let dataConfigUrls = envVariables.DATA_CONFIG_URLS;
+let formatConfigUrls = envVariables.FORMAT_CONFIG_URLS;
 
 let pdfConfigUrl = envVariables.PDF_CONFIG_URL;
 
@@ -433,22 +433,28 @@ app.post(
   })
 );
 
-pdfConfigUrl &&
-  pdfConfigUrl.split(",").map(item1 => {
-    item1 = item1.trim();
-    if (item1.includes("file://")) {
-      item1 = item1.replace("file://", "");
-      fs.readFile(item1, "utf8", function(err, data1) {
+pdfConfigUrl => {
+  logger.info("pdfconfig- " + pdfConfigUrl);
+  item1 = pdfConfigUrl.replace("file://", "");
+
+  logger.info("item1- " + item1);
+  fs.readFile(item1, "utf8", function(err, data1) {
         try {
+
+        logger.info("parsing file- ");
+
           if (err) {
-            logger.error(
-              "error when reading file for dataconfig: file:///" + item
-            );
-            logger.error(err.stack);
+                logger.error(
+                  "error when reading file for pdf config: file:///" + pdfConfigUrl
+                );
+                logger.error(err.stack);
           } else {
-            data1 = JSON.parse(data1);
-	    data1.dataconfig.forEach(item =>{
-		item = item.replace("file://", "");
+                data1 = JSON.parse(data1);
+  logger.info("parsed- "+data1);
+		data1.dataconfig.forEach(item => {
+    item = item.trim();
+    if (item.includes("file://")) {
+      item = item.replace("file://", "");
       fs.readFile(item, "utf8", function(err, data) {
         try {
           if (err) {
@@ -465,10 +471,25 @@ pdfConfigUrl &&
           logger.error("error in loading dataconfig: file:///" + item);
           logger.error(error.stack);
         }
-      });	    		    
-	    });
-            data1.formatconfig.forEach(item =>{
-		item = item.replace("file://", "");
+      });
+    } else {
+      (async () => {
+        try {
+          var response = await axios.get(item);
+          dataConfigMap[response.data.key] = response.data;
+          logger.info("loaded dataconfig: " + item);
+        } catch (error) {
+          logger.error("error in loading dataconfig: " + item);
+          logger.error(error.stack);
+        }
+      })();
+    }
+  });
+		  
+	data1.formatconfig.forEach(item => {
+    item = item.trim();
+    if (item.includes("file://")) {
+      item = item.replace("file://", "");
       fs.readFile(item, "utf8", function(err, data) {
         try {
           if (err) {
@@ -486,18 +507,31 @@ pdfConfigUrl &&
           logger.error(error.stack);
         }
       });
-            });
-          }
+    } else {
+      (async () => {
+        try {
+          var response = await axios.get(item);
+          formatConfigMap[response.data.key] = response.data.config;
+          logger.info("loaded formatconfig: " + item);
         } catch (error) {
-          logger.error("error in loading dataconfig: file:///" + item);
+          logger.error("error in loading formatconfig: " + item);
           logger.error(error.stack);
         }
-      });
+      })();
     }
   });
+		logger.info("loaded dataconfig URLs: " + dcArray);
+		logger.info("loaded formatconfig URLs: " + fcArray);
+	  }
+	} catch (error) {
+	  logger.error("error in loading pdf config: file:///" + pdfConfigUrl);
+	  logger.error(error.stack);
+	}
+  });
+}
+
 /*
-dataConfigUrls &&
-  dataConfigUrls.split(",").map(item => {
+dcArray && dcArray.forEach(item => {
     item = item.trim();
     if (item.includes("file://")) {
       item = item.replace("file://", "");
@@ -532,8 +566,8 @@ dataConfigUrls &&
     }
   });
 
-formatConfigUrls &&
-  formatConfigUrls.split(",").map(item => {
+fcArray &&
+  fcArray.forEach(item => {
     item = item.trim();
     if (item.includes("file://")) {
       item = item.replace("file://", "");
@@ -571,6 +605,7 @@ formatConfigUrls &&
 
 app.listen(serverport, () => {
   logger.info(`Server running at http:${serverport}/`);
+  logger.info("pdfConfigUrl-"+pdfConfigUrl);
 });
 
 /**
