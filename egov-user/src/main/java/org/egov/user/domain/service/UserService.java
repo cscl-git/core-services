@@ -3,6 +3,7 @@ package org.egov.user.domain.service;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.egov.common.contract.request.RequestInfo;
+import org.egov.tracer.model.CustomException;
 import org.egov.user.domain.exception.*;
 import org.egov.user.domain.model.LoggedInUserUpdatePasswordRequest;
 import org.egov.user.domain.model.NonLoggedInUserUpdatePasswordRequest;
@@ -104,7 +105,7 @@ public class UserService {
         List<User> users = userRepository.findAll(userSearchCriteria);
 
         if (users.isEmpty())
-            throw new UserNotFoundException(userSearchCriteria);
+            throw new CustomException("UserNotFoundException", "User not found for given criteria ");
         if (users.size() > 1)
             throw new DuplicateUserNameException(userSearchCriteria);
 
