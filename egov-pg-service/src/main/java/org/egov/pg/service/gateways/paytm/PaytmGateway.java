@@ -122,9 +122,6 @@ public class PaytmGateway implements Gateway {
 		treeMap.put("ORDER_ID", currentStatus.getTxnId());
 
 		try {
-			// String checkSum =
-			// CheckSumServiceHelper.getCheckSumServiceHelper().genrateCheckSum(MERCHANT_KEY,
-			// treeMap);
 			String checkSum = PaytmChecksum.generateSignature(treeMap, MERCHANT_KEY);
 			treeMap.put("CHECKSUMHASH", checkSum);
 

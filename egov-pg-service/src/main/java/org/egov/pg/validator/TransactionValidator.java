@@ -131,7 +131,12 @@ public class TransactionValidator {
 				newStatus.setTxnStatusMsg(PgConstants.TXN_FAILURE_AMT_MISMATCH);
 				return false;
 			}
-		} else {
+		}
+		else if (newStatus.getTxnStatus().equals(Transaction.TxnStatusEnum.PENDING)) {
+			newStatus.setTxnStatusMsg(PgConstants.TXN_PENDING);
+			return false;
+		}
+		else {
 			newStatus.setTxnStatus(Transaction.TxnStatusEnum.FAILURE);
 			newStatus.setTxnStatusMsg(PgConstants.TXN_FAILURE_GATEWAY);
 			return false;

@@ -4,6 +4,7 @@ public class PgConstants {
 
     public static final String TXN_INITIATED = "Transaction initiated";
     public static final String TXN_SUCCESS = "Transaction successful";
+    public static final String TXN_PENDING = "Transaction pending at gateway";
     public static final String TXN_FAILURE_GATEWAY = "Transaction failed at gateway";
     public static final String TXN_FAILURE_AMT_MISMATCH = "Transaction failed, amount mismatch";
     public static final String TXN_RECEIPT_GEN_FAILED = "Receipt generation failed";
