@@ -100,7 +100,7 @@ public class SmsProperties {
 		String sms = null;
 		if (text != null)
 			sms = text.concat(defaultFooter);
-		LOGGER.info("sms-" + sms);
+		//LOGGER.info("sms-" + sms);
 		return sms;
 	}
 

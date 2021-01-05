@@ -149,7 +149,8 @@ public class ExternalSMSService implements SMSService {
             if (requestType.equals("POST")) {
                 HttpEntity<MultiValueMap<String, String>> request = getRequest(sms);
                 response = restTemplate.postForEntity(url, request, String.class);
-                LOGGER.info("response-"+response);
+                if(response!=null)
+                LOGGER.info("response-"+response.getStatusCodeValue()+":"+response.getBody());
                 if (isResponseCodeInKnownErrorCodeList(response)) {
                     throw new RuntimeException(SMS_RESPONSE_NOT_SUCCESSFUL);
                 }
@@ -184,7 +185,7 @@ public class ExternalSMSService implements SMSService {
 
     private HttpEntity<MultiValueMap<String, String>> getRequest(Sms sms) {
         final MultiValueMap<String, String> requestBody = smsProperties.getSmsRequestBody(sms);
-        LOGGER.info("requestBody-"+requestBody);
+        //LOGGER.info("requestBody-"+requestBody);
         return new HttpEntity<>(requestBody, getHttpHeaders());
     }
 

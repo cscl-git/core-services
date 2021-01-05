@@ -55,7 +55,7 @@ public class KafkaListenerLoggingAspect {
                 log.info(RECEIVED_MESSAGE, topics, messageBodyAsString);
             }
             final Object result = pjp.proceed();
-            log.info(PROCESSED_SUCCESS_MESSAGE);
+            //log.info(PROCESSED_SUCCESS_MESSAGE);
             return result;
         } catch (Exception e) {
             log.error(EXCEPTION_MESSAGE, e);
