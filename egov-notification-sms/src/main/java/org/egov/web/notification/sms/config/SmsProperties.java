@@ -40,10 +40,15 @@
 
 package org.egov.web.notification.sms.config;
 
-import lombok.Getter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.StringUtils;
 import org.egov.web.notification.sms.models.Priority;
 import org.egov.web.notification.sms.models.Sms;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -51,16 +56,20 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.util.HashMap;
-import java.util.List;
+import lombok.Getter;
 
 @Component
 public class SmsProperties {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(SmsProperties.class);
+	
     private static final String SMS_PRIORITY_PARAM_VALUE = "sms.%s.priority.param.value";
     private static final String SMS_EXTRA_REQ_PARAMS = "sms.extra.req.params";
     private static final String KEY_VALUE_PAIR_DELIMITER = "&";
     private static final String KEY_VALUE_DELIMITER = "=";
+    private static final String TEMPLETE_KEY_VALUE_DELIMITER = "::";
+    
+    private static Map<String, String> templateMap = new HashMap<>();
 
     @Autowired
     private Environment environment;
@@ -71,9 +80,14 @@ public class SmsProperties {
         map.add(passwordParameterName, password);
         map.add(senderIdParameterName, smsSender);
         map.add(mobileNumberParameterName, getMobileNumberWithPrefix(sms.getMobileNumber()));
-        map.add(messageParameterName, sms.getMessage());
+        //map.add(messageParameterName, sms.getMessage());
         populateSmsPriority(sms.getPriority(), map);
         populateAdditionalSmsParameters(map);
+        
+        map.add(messageParameterName, sms.getMessage()==null?
+				null:sms.getMessage().concat(defaultFooter));
+        if(isDltEnabled)
+        	map.add(templateParameterName, getTemplateId(sms.getMessage()));
 
         return map;
     }
@@ -130,6 +144,41 @@ public class SmsProperties {
     @Value("#{'${sms.error.codes}'.split(',')}")
     @Getter
     private List<String> smsErrorCodes;
+    
+    @Value("${sms.dlt.enabled}")
+    private boolean isDltEnabled;
+    
+    @Value("${sms.sender.templateid.param.name}")
+	private String templateParameterName;
+	
+	@Value("${sms.default.footer}")
+	private String defaultFooter;
+	
+	@Value("${sms.template.default.id}")
+	private String defaultTemplateId;
+	
+	@Value("#{'${sms.template.ids}'.split('##')}")
+	@Getter
+	private List<String> smsTemplateIds;
+	
+	private String getTemplateId(String message){
+		if(templateMap.isEmpty()){
+			for(String kv : smsTemplateIds){
+				String []keyValue = kv.split(TEMPLETE_KEY_VALUE_DELIMITER);
+				templateMap.put(keyValue[0], keyValue[1]);
+			}
+		}
+		
+		String templateId = templateMap.entrySet().stream()
+		  .filter(e -> message.contains(e.getKey()))
+		  .map(Map.Entry::getValue)
+		  .findFirst()
+		  .orElse(defaultTemplateId);
+		
+		LOGGER.info("templateId-"+templateId);
+		
+		return templateId;
+	}
 
     private String getSmsPriority(Priority priority) {
         return getProperty(String.format(SMS_PRIORITY_PARAM_VALUE, priority.toString()));
