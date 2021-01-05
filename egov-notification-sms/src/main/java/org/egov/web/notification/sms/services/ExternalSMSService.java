@@ -183,6 +183,7 @@ public class ExternalSMSService implements SMSService {
 
     private HttpEntity<MultiValueMap<String, String>> getRequest(Sms sms) {
         final MultiValueMap<String, String> requestBody = smsProperties.getSmsRequestBody(sms);
+        LOGGER.info("requestBody-"+requestBody);
         return new HttpEntity<>(requestBody, getHttpHeaders());
     }
 

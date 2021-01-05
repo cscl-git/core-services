@@ -94,7 +94,7 @@ public class SmsProperties {
     	String sms = null;
     	if(text != null)
     		sms = text.concat(defaultFooter);
-    	LOGGER.debug("sms-"+sms);
+    	LOGGER.info("sms-"+sms);
     	return sms;
     }
 
@@ -184,7 +184,7 @@ public class SmsProperties {
 		  .findFirst()
 		  .orElse(defaultTemplateId);
 		
-		LOGGER.debug("templateId-"+templateId);
+		LOGGER.info("templateId-"+templateId);
 		
 		return templateId;
 	}
