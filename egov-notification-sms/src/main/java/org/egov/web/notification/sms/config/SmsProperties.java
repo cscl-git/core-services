@@ -80,16 +80,22 @@ public class SmsProperties {
         map.add(passwordParameterName, password);
         map.add(senderIdParameterName, smsSender);
         map.add(mobileNumberParameterName, getMobileNumberWithPrefix(sms.getMobileNumber()));
-        //map.add(messageParameterName, sms.getMessage());
+        map.add(messageParameterName, setSms(sms.getMessage()));
         populateSmsPriority(sms.getPriority(), map);
         populateAdditionalSmsParameters(map);
         
-        map.add(messageParameterName, sms.getMessage()==null?
-				null:sms.getMessage().concat(defaultFooter));
         if(isDltEnabled)
         	map.add(templateParameterName, getTemplateId(sms.getMessage()));
 
         return map;
+    }
+    
+    private String setSms(String text){
+    	String sms = null;
+    	if(text != null)
+    		sms = text.concat(defaultFooter);
+    	LOGGER.debug("sms-"+sms);
+    	return sms;
     }
 
     private void populateSmsPriority(Priority priority, MultiValueMap<String, String> requestBody) {
@@ -162,6 +168,9 @@ public class SmsProperties {
 	private List<String> smsTemplateIds;
 	
 	private String getTemplateId(String message){
+		if(message == null || message.isEmpty())
+			return defaultTemplateId;
+		
 		if(templateMap.isEmpty()){
 			for(String kv : smsTemplateIds){
 				String []keyValue = kv.split(TEMPLETE_KEY_VALUE_DELIMITER);
@@ -175,7 +184,7 @@ public class SmsProperties {
 		  .findFirst()
 		  .orElse(defaultTemplateId);
 		
-		LOGGER.info("templateId-"+templateId);
+		LOGGER.debug("templateId-"+templateId);
 		
 		return templateId;
 	}
