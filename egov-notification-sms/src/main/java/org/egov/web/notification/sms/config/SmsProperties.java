@@ -40,6 +40,8 @@
 
 package org.egov.web.notification.sms.config;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,159 +64,229 @@ import lombok.Getter;
 public class SmsProperties {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SmsProperties.class);
-	
-    private static final String SMS_PRIORITY_PARAM_VALUE = "sms.%s.priority.param.value";
-    private static final String SMS_EXTRA_REQ_PARAMS = "sms.extra.req.params";
-    private static final String KEY_VALUE_PAIR_DELIMITER = "&";
-    private static final String KEY_VALUE_DELIMITER = "=";
-    private static final String TEMPLETE_KEY_VALUE_DELIMITER = "::";
-    
-    private static Map<String, String> templateMap = new HashMap<>();
 
-    @Autowired
-    private Environment environment;
+	private static final String SMS_PRIORITY_PARAM_VALUE = "sms.%s.priority.param.value";
+	private static final String SMS_EXTRA_REQ_PARAMS = "sms.extra.req.params";
+	private static final String KEY_VALUE_PAIR_DELIMITER = "&";
+	private static final String KEY_VALUE_DELIMITER = "=";
+	private static final String TEMPLETE_KEY_VALUE_DELIMITER = "::";
 
-    public MultiValueMap<String, String> getSmsRequestBody(Sms sms) {
-        MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
-        map.add(userParameterName, userName);
-        map.add(passwordParameterName, password);
-        map.add(senderIdParameterName, smsSender);
-        map.add(mobileNumberParameterName, getMobileNumberWithPrefix(sms.getMobileNumber()));
-        map.add(messageParameterName, setSms(sms.getMessage()));
-        populateSmsPriority(sms.getPriority(), map);
-        populateAdditionalSmsParameters(map);
-        
-        if(isDltEnabled)
-        	map.add(templateParameterName, getTemplateId(sms.getMessage()));
+	private static Map<String, String> templateMap = new HashMap<>();
 
-        return map;
-    }
-    
-    private String setSms(String text){
-    	String sms = null;
-    	if(text != null)
-    		sms = text.concat(defaultFooter);
-    	LOGGER.info("sms-"+sms);
-    	return sms;
-    }
+	@Autowired
+	private Environment environment;
 
-    private void populateSmsPriority(Priority priority, MultiValueMap<String, String> requestBody) {
-        if (isPriorityEnabled) {
-            requestBody.add(smsPriorityParameterName, getSmsPriority(priority));
-        }
-    }
+	public MultiValueMap<String, String> getSmsRequestBody(Sms sms) {
+		String message = setSms(sms.getMessage());
+		
+		MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
+		map.add(userParameterName, userName);
+		map.add(passwordParameterName, isDltEnabled?MD5(password):password);
+		map.add(senderIdParameterName, smsSender);
+		map.add(mobileNumberParameterName, getMobileNumberWithPrefix(sms.getMobileNumber()));
+		map.add(messageParameterName, message);
+		populateSmsPriority(sms.getPriority(), map);
+		populateAdditionalSmsParameters(map);
+		
+		if (isDltEnabled){
+			map.add(secureKeyParameterName, hashGenerator(userName, smsSender, message, secureKey));
+			map.add(templateParameterName, getTemplateId(sms.getMessage()));
+		}
 
-    private void populateAdditionalSmsParameters(MultiValueMap<String, String> map) {
-        if (isExtraRequestParametersPresent()) {
-            map.setAll(getExtraRequestParameters());
-        }
-    }
+		return map;
+	}
 
-    @Value("${sms.provider.url}")
-    @Getter
-    private String smsProviderURL;
+	private String setSms(String text) {
+		String sms = null;
+		if (text != null)
+			sms = text.concat(defaultFooter);
+		LOGGER.info("sms-" + sms);
+		return sms;
+	}
 
-    @Value("${sms.sender.username}")
-    private String userName;
+	private void populateSmsPriority(Priority priority, MultiValueMap<String, String> requestBody) {
+		if (isPriorityEnabled) {
+			requestBody.add(smsPriorityParameterName, getSmsPriority(priority));
+		}
+	}
 
-    @Value("${sms.priority.enabled}")
-    private boolean isPriorityEnabled;
+	private void populateAdditionalSmsParameters(MultiValueMap<String, String> map) {
+		if (isExtraRequestParametersPresent()) {
+			map.setAll(getExtraRequestParameters());
+		}
+	}
 
-    @Value("${sms.sender.password}")
-    private String password;
+	@Value("${sms.provider.url}")
+	@Getter
+	private String smsProviderURL;
 
-    @Value("${sms.sender}")
-    private String smsSender;
+	@Value("${sms.sender.username}")
+	private String userName;
 
-    @Value("${sms.sender.username.req.param.name}")
-    private String userParameterName;
+	@Value("${sms.priority.enabled}")
+	private boolean isPriorityEnabled;
 
-    @Value("${sms.sender.password.req.param.name}")
-    private String passwordParameterName;
+	@Value("${sms.sender.password}")
+	private String password;
 
-    @Value("${sms.priority.param.name}")
-    private String smsPriorityParameterName;
+	@Value("${sms.sender}")
+	private String smsSender;
 
-    @Value("${sms.sender.req.param.name}")
-    private String senderIdParameterName;
+	@Value("${sms.sender.username.req.param.name}")
+	private String userParameterName;
 
-    @Value("${sms.destination.mobile.req.param.name}")
-    private String mobileNumberParameterName;
+	@Value("${sms.sender.password.req.param.name}")
+	private String passwordParameterName;
 
-    @Value("${sms.message.req.param.name}")
-    private String messageParameterName;
+	@Value("${sms.priority.param.name}")
+	private String smsPriorityParameterName;
 
-    @Value("${mobile.number.prefix:}")
-    private String mobileNumberPrefix;
+	@Value("${sms.sender.req.param.name}")
+	private String senderIdParameterName;
 
-    @Value("#{'${sms.error.codes}'.split(',')}")
-    @Getter
-    private List<String> smsErrorCodes;
-    
-    @Value("${sms.dlt.enabled}")
-    private boolean isDltEnabled;
-    
-    @Value("${sms.sender.templateid.param.name}")
+	@Value("${sms.destination.mobile.req.param.name}")
+	private String mobileNumberParameterName;
+
+	@Value("${sms.message.req.param.name}")
+	private String messageParameterName;
+
+	@Value("${mobile.number.prefix:}")
+	private String mobileNumberPrefix;
+
+	@Value("#{'${sms.error.codes}'.split(',')}")
+	@Getter
+	private List<String> smsErrorCodes;
+
+	@Value("${sms.dlt.enabled}")
+	private boolean isDltEnabled;
+
+	@Value("${sms.sender.securekey.req.param.name}")
+	private String secureKeyParameterName;
+
+	@Value("${sms.sender.securekey}")
+	private String secureKey;
+
+	@Value("${sms.sender.templateid.param.name}")
 	private String templateParameterName;
-	
+
 	@Value("${sms.default.footer}")
 	private String defaultFooter;
-	
+
 	@Value("${sms.template.default.id}")
 	private String defaultTemplateId;
-	
+
 	@Value("#{'${sms.template.ids}'.split('##')}")
 	@Getter
 	private List<String> smsTemplateIds;
-	
-	private String getTemplateId(String message){
-		if(message == null || message.isEmpty())
+
+	private String getTemplateId(String message) {
+		if (message == null || message.isEmpty())
 			return defaultTemplateId;
-		
-		if(templateMap.isEmpty()){
-			for(String kv : smsTemplateIds){
-				String []keyValue = kv.split(TEMPLETE_KEY_VALUE_DELIMITER);
+
+		if (templateMap.isEmpty()) {
+			for (String kv : smsTemplateIds) {
+				String[] keyValue = kv.split(TEMPLETE_KEY_VALUE_DELIMITER);
 				templateMap.put(keyValue[0], keyValue[1]);
 			}
 		}
-		
-		String templateId = templateMap.entrySet().stream()
-		  .filter(e -> message.contains(e.getKey()))
-		  .map(Map.Entry::getValue)
-		  .findFirst()
-		  .orElse(defaultTemplateId);
-		
-		LOGGER.info("templateId-"+templateId);
-		
+
+		String templateId = templateMap.entrySet().stream().filter(e -> message.contains(e.getKey()))
+				.map(Map.Entry::getValue).findFirst().orElse(defaultTemplateId);
+
+		LOGGER.info("templateId-" + templateId);
+
 		return templateId;
 	}
 
-    private String getSmsPriority(Priority priority) {
-        return getProperty(String.format(SMS_PRIORITY_PARAM_VALUE, priority.toString()));
-    }
+	private String getSmsPriority(Priority priority) {
+		return getProperty(String.format(SMS_PRIORITY_PARAM_VALUE, priority.toString()));
+	}
 
-    private String getMobileNumberWithPrefix(String mobileNumber) {
-        return mobileNumberPrefix + mobileNumber;
-    }
+	private String getMobileNumberWithPrefix(String mobileNumber) {
+		return mobileNumberPrefix + mobileNumber;
+	}
 
-    private String getProperty(String propKey) {
-        return this.environment.getProperty(propKey, "");
-    }
+	private String getProperty(String propKey) {
+		return this.environment.getProperty(propKey, "");
+	}
 
-    private boolean isExtraRequestParametersPresent() {
-        return StringUtils.isNotBlank(getProperty(SMS_EXTRA_REQ_PARAMS));
-    }
+	private boolean isExtraRequestParametersPresent() {
+		return StringUtils.isNotBlank(getProperty(SMS_EXTRA_REQ_PARAMS));
+	}
 
-    private HashMap<String, String> getExtraRequestParameters() {
-        String[] extraParameters = getProperty(SMS_EXTRA_REQ_PARAMS).split(KEY_VALUE_PAIR_DELIMITER);
-        final HashMap<String, String> map = new HashMap<>();
-        if (extraParameters.length > 0) {
-            for (String extraParm : extraParameters) {
-                String[] paramNameValue = extraParm.split(KEY_VALUE_DELIMITER);
-                map.put(paramNameValue[0], paramNameValue[1]);
-            }
-        }
-        return map;
-    }
+	private HashMap<String, String> getExtraRequestParameters() {
+		String[] extraParameters = getProperty(SMS_EXTRA_REQ_PARAMS).split(KEY_VALUE_PAIR_DELIMITER);
+		final HashMap<String, String> map = new HashMap<>();
+		if (extraParameters.length > 0) {
+			for (String extraParm : extraParameters) {
+				String[] paramNameValue = extraParm.split(KEY_VALUE_DELIMITER);
+				map.put(paramNameValue[0], paramNameValue[1]);
+			}
+		}
+		return map;
+	}
+
+	/****
+	 * Method to convert Normal Plain Text Password to MD5 encrypted password
+	 ***/
+
+	private static String MD5(String text) {
+		MessageDigest md;
+		try {
+			md = MessageDigest.getInstance("SHA-1");
+			byte[] md5 = new byte[64];
+			md.update(text.getBytes("iso-8859-1"), 0, text.length());
+			md5 = md.digest();
+
+			return convertedToHex(md5);
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage());
+		}
+
+		return text;
+	}
+
+	private static String convertedToHex(byte[] data) {
+		StringBuffer buf = new StringBuffer();
+
+		for (int i = 0; i < data.length; i++) {
+			int halfOfByte = (data[i] >>> 4) & 0x0F;
+			int twoHalfBytes = 0;
+
+			do {
+				if ((0 <= halfOfByte) && (halfOfByte <= 9)) {
+					buf.append((char) ('0' + halfOfByte));
+				} else {
+					buf.append((char) ('a' + (halfOfByte - 10)));
+				}
+
+				halfOfByte = data[i] & 0x0F;
+
+			} while (twoHalfBytes++ < 1);
+		}
+		return buf.toString();
+	}
+
+	protected String hashGenerator(String userName, String senderId, String content, String secureKey) {
+		StringBuilder finalString = new StringBuilder();
+		finalString.append(userName.trim()).append(senderId.trim()).append(content.trim()).append(secureKey.trim());
+		String hashGen = finalString.toString();
+		StringBuilder sb = null;
+		MessageDigest md;
+		try {
+			md = MessageDigest.getInstance("SHA-512");
+			md.update(hashGen.getBytes());
+			byte byteData[] = md.digest();
+			// convert the byte to hex format method 1
+			sb = new StringBuilder();
+			for (int i = 0; i < byteData.length; i++) {
+				sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
+			}
+
+		} catch (NoSuchAlgorithmException e) {
+			LOGGER.error(e.getMessage());
+		}
+		return sb.toString();
+	}
 
 }
