@@ -149,6 +149,7 @@ public class ExternalSMSService implements SMSService {
             if (requestType.equals("POST")) {
                 HttpEntity<MultiValueMap<String, String>> request = getRequest(sms);
                 response = restTemplate.postForEntity(url, request, String.class);
+                LOGGER.info("response-"+response);
                 if (isResponseCodeInKnownErrorCodeList(response)) {
                     throw new RuntimeException(SMS_RESPONSE_NOT_SUCCESSFUL);
                 }
