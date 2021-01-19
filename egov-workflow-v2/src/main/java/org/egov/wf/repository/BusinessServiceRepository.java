@@ -1,19 +1,20 @@
 package org.egov.wf.repository;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.egov.wf.config.WorkflowConfig;
 import org.egov.wf.repository.querybuilder.BusinessServiceQueryBuilder;
+import org.egov.wf.repository.rowmapper.BusinessServiceDescRowMapper;
 import org.egov.wf.repository.rowmapper.BusinessServiceRowMapper;
-import org.egov.wf.web.models.*;
+import org.egov.wf.web.models.BusinessDesc;
+import org.egov.wf.web.models.BusinessService;
+import org.egov.wf.web.models.BusinessServiceSearchCriteria;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Repository
@@ -26,16 +27,19 @@ public class BusinessServiceRepository {
 
     private BusinessServiceRowMapper rowMapper;
 
+    private BusinessServiceDescRowMapper descRowMapper;
+    
     private WorkflowConfig config;
 
 
     @Autowired
     public BusinessServiceRepository(BusinessServiceQueryBuilder queryBuilder, JdbcTemplate jdbcTemplate,
-                                     BusinessServiceRowMapper rowMapper, WorkflowConfig config) {
+                                     BusinessServiceRowMapper rowMapper, WorkflowConfig config, BusinessServiceDescRowMapper descRowMapper) {
         this.queryBuilder = queryBuilder;
         this.jdbcTemplate = jdbcTemplate;
         this.rowMapper = rowMapper;
         this.config = config;
+        this.descRowMapper = descRowMapper;
     }
 
 
@@ -57,9 +61,20 @@ public class BusinessServiceRepository {
         return jdbcTemplate.query(query, preparedStmtList.toArray(), rowMapper);
     }
 
-
-
-
+	public List<BusinessDesc> getBusinessServicesDesc(BusinessServiceSearchCriteria searchCriteria) {
+        List<Object> preparedStmtList = new ArrayList<>();
+        String query;
+        if(config.getIsStateLevel()){
+            BusinessServiceSearchCriteria stateLevelCriteria = new BusinessServiceSearchCriteria(searchCriteria);
+            stateLevelCriteria.setTenantId(searchCriteria.getTenantId().split("\\.")[0]);
+            query = queryBuilder.getBusinessServicesDesc(stateLevelCriteria, preparedStmtList);
+        }
+        else{
+            query = queryBuilder.getBusinessServicesDesc(searchCriteria, preparedStmtList);
+        }
+				
+        return jdbcTemplate.query(query, preparedStmtList.toArray(), descRowMapper);
+    }
 
 
 }
