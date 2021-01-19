@@ -3,6 +3,7 @@ package org.egov.wf.service;
 import org.egov.wf.config.WorkflowConfig;
 import org.egov.wf.producer.Producer;
 import org.egov.wf.repository.BusinessServiceRepository;
+import org.egov.wf.web.models.BusinessDesc;
 import org.egov.wf.web.models.BusinessService;
 import org.egov.wf.web.models.BusinessServiceRequest;
 import org.egov.wf.web.models.BusinessServiceSearchCriteria;
@@ -65,6 +66,18 @@ public class BusinessMasterService {
         producer.push(config.getUpdateBusinessServiceTopic(),request);
         return request.getBusinessServices();
     }
+
+
+
+
+	public List<BusinessDesc> desc(BusinessServiceSearchCriteria searchCriteria) {
+
+        String tenantId = searchCriteria.getTenantId();
+        List<BusinessDesc> businessServices = repository.getBusinessServicesDesc(searchCriteria);
+       
+        return businessServices;
+    
+	}
 
 
 

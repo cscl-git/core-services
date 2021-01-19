@@ -67,7 +67,16 @@ public class BusinessServiceController {
         return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
-
+    @RequestMapping(value="/businessservice/_desc", method = RequestMethod.POST)
+    public ResponseEntity<BusinessServiceDescResponse> desc(@Valid @ModelAttribute BusinessServiceSearchCriteria searchCriteria,
+			@Valid @RequestBody RequestInfoWrapper requestInfoWrapper) {
+		List<BusinessDesc> businessServices = businessMasterService.desc(searchCriteria);
+		BusinessServiceDescResponse response = BusinessServiceDescResponse.builder().businessServiceDescription(businessServices)
+				.responseInfo(responseInfoFactory.createResponseInfoFromRequestInfo(requestInfoWrapper.getRequestInfo(),
+						true))
+				.build();
+		return new ResponseEntity<>(response, HttpStatus.OK);
+	}
 
 
 }

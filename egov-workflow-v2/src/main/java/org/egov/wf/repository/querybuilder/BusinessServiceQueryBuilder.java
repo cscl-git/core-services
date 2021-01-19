@@ -29,7 +29,7 @@ public class BusinessServiceQueryBuilder {
             INNER_JOIN + " eg_wf_state_v2 st ON st.businessServiceId = bs.uuid " +
             LEFT_OUTER_JOIN  + " eg_wf_action_v2 ac ON ac.currentState = st.uuid WHERE ";
 
-
+     private static final String BUSINESS_SERVICE_DESC = "SELECT businessservice, business, tenantid, createdby, createdtime, lastmodifiedby, lastmodifiedtime,  description FROM eg_wf_businessService_v2 bs  WHERE ";
 
 
     public String getBusinessServices(BusinessServiceSearchCriteria criteria, List<Object> preparedStmtList){
@@ -64,6 +64,14 @@ public class BusinessServiceQueryBuilder {
     }
 
 
+    public String getBusinessServicesDesc(BusinessServiceSearchCriteria criteria, List<Object> preparedStmtList){
+        StringBuilder builder = new StringBuilder(BUSINESS_SERVICE_DESC);
+        builder.append("  tenantId=? ");
+        preparedStmtList.add(criteria.getTenantId());
+
+
+        return builder.toString();
+    }
     /*
      * private String createQuery(Set<String> ids) {
      *
