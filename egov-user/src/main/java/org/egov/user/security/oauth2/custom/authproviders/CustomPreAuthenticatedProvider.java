@@ -57,10 +57,10 @@ public class CustomPreAuthenticatedProvider implements AuthenticationProvider {
             user = userService.getUniqueUser(userName, tenantId, UserType.fromValue(userType));
         } catch (UserNotFoundException e) {
             log.error("User not found", e);
-            throw new OAuth2Exception("Invalid login credentials");
+            throw new OAuth2Exception("Incorrect username or password");
         } catch (DuplicateUserNameException e) {
             log.error("Fatal error, user conflict, more than one user found", e);
-            throw new OAuth2Exception("Invalid login credentials");
+            throw new OAuth2Exception("Incorrect username or password");
 
         }
 

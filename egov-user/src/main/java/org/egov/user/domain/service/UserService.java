@@ -105,7 +105,7 @@ public class UserService {
         List<User> users = userRepository.findAll(userSearchCriteria);
 
         if (users.isEmpty())
-            throw new CustomException("UserNotFoundException", "User not found for given criteria ");
+            throw new CustomException("UserNotFoundException", "Incorrect username or password");
         if (users.size() > 1)
             throw new DuplicateUserNameException(userSearchCriteria);
 
