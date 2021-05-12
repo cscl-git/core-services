@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 public class UserAlreadyExistErrorAdapter implements ErrorAdapter<Void> {
 
 	private static final String UNKNOWN_MOBILE_NUMBER_CODE = "OTP.MOBILENUMBER";
-	private static final String UNKNOWN_MOBILE_NUMBER_MESSAGE = "This MobileNumber Already Register as UserName in System. Pls try Another UserName";
+	private static final String UNKNOWN_MOBILE_NUMBER_MESSAGE = "This mobile number already registered in System. Please try another mobile number";
 	private static final String UNKNOWN_MOBILE_NUMBER_FIELD = "otp.mobileNumber";
 	private static final String MESSAGE = "OTP request for register failed";
 
