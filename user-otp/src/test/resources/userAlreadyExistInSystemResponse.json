@@ -7,7 +7,7 @@
         "fields": [
             {
                 "code": "OTP.MOBILENUMBER",
-                "message": "Mobile number is already registered",
+                "message": "This MobileNumber Already Register as UserName in System. Pls try Another UserName",
                 "field": "otp.mobileNumber"
             }
         ]
